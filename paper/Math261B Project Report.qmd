@@ -28,7 +28,7 @@ THIS DOCUMENT HAS NO CONTENT YET! The title is a placeholder while we figure eve
 
 Describe to the reader: (1) the motivation for this project; (2) a brief overview of the broader context; (3) the key research question or knowledge gap that is addressed by the experiment; (4) the main experiment's design; (5) the key findings and why they are important; and (6) the structure of the paper. Three to four paragraphs should be sufficient.
 
-EXAMPLE CITATION from the .bib file. We conducted all analyses using the R programming language [@R_language].
+EXAMPLE CITATION from the .bib file. We conducted all analyses using the R programming language [@R_core_2025].
 
 
 # Literature Review {#sec-lit-review}
