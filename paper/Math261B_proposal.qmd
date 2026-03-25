@@ -1,0 +1,30 @@
+---
+title: "Dosage Inequity in Pharmaceutical Studies: A Power Analysis"
+subtitle: "Project Proposal"
+author:
+  - "Susan Peck"
+  - "Jan Blackburn"
+  - "Joseph Burks"
+date: today
+date-format: long
+format: pdf
+bibliography: references.bib
+---
+
+# Research Question
+
+Identify the question you wish to explore in this project. This should be a question of some real-world relevance that can be answered at least partially using experimental data.
+
+# Related Literature
+
+Choose one main article that you are interested in exploring in detail. Identify at least two to three additional published articles in peer-reviewed journals describing experiments that relate to your research question. Provide brief descriptions and formal citations for each article and identify which articles have published data.
+
+# Study Design
+
+Provide a brief summary of the study design for your main article. Describe the key response variable(s) and factors, the subjects and experimental units, and other basic information about the experimental procedure (e.g., are randomization or blocking used?).
+
+# Analysis Plan
+
+Explain how you will obtain data (using existing data, collecting real experimental data, or simulation) and identify any relevant statistical models or hypothesis tests that you will use for analysis. Describe whether your selected article includes information about a power analysis.
+
+# References

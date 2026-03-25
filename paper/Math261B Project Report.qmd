@@ -1,0 +1,54 @@
+---
+title: "Dosage Inequity in Pharmaceutical Studies: A Power Analysis"
+subtitle: "Replication and Reanalysis"
+author:
+  - "Susan Peck"
+  - "Jan Blackburn"
+  - "Joseph Burks"
+thanks: "Project repository available at: https://github.com/susanpeck/Math261BExperimentalDesignProject"
+date: today
+date-format: long
+abstract: "Briefly describe the motivation, data, analysis, key findings, and implications. Clearly describe what the reader learns as a result of this paper. Three to five sentences."
+format: pdf
+bibliography: references.bib
+number-sections: true
+---
+
+```{r}
+#| include: false
+#| warning: false
+#| message: false
+# load libraries
+library(tidyverse)
+```
+
+THIS DOCUMENT HAS NO CONTENT YET! The title is a placeholder while we figure everything out. Everything below is from the project directions. 
+
+# Introduction
+
+Describe to the reader: (1) the motivation for this project; (2) a brief overview of the broader context; (3) the key research question or knowledge gap that is addressed by the experiment; (4) the main experiment's design; (5) the key findings and why they are important; and (6) the structure of the paper. Three to four paragraphs should be sufficient.
+
+EXAMPLE CITATION from the .bib file. We conducted all analyses using the R programming language [@R_language].
+
+
+# Literature Review {#sec-lit-review}
+
+Identify at least two papers that use experiments to explore your question of interest or related questions. For each, briefly describe the design, summarize the results, and discuss how they relate. Discuss how the selected experiments lead to similar or dissimilar conclusions and assess whether any of the experiments are more convincing than the others.
+
+# Study Design {#sec-study-design}
+
+Expand upon the information provided in the project proposal and provide a detailed description of the experiment you are reviewing. Discuss the strengths and weaknesses of this design. Describe the key response variable(s) and factors, the subjects and experimental units, and other basic information about the experimental procedure (e.g., are randomization or blocking used?).
+
+# Statistical Analysis Plan and Power Analysis {#sec-methods}
+
+Introduce the dataset you are using. This section should: (1) describe the observational units of the dataset; (2) introduce and explain all relevant variables; (3) describe any relevant details about how the data were collected. Describe the planned statistical analysis, identifying any relevant statistical models or hypothesis tests. Provide details about how power analysis should be conducted for the specified design and hypotheses, and carry out the appropriate computations. Describe whether the original article includes information about a power analysis.
+
+# Reanalysis {#sec-results}
+
+Provide results detailing your reanalysis of the published data. This section should include relevant tables, graphs, and quantitative results, as well as plain English explanations of all of these components. Clearly explain what the model results show and connect your results to the central research question(s) and their broader context. Note: there should be no R code or raw R output in the submitted PDF.
+
+# Discussion {#sec-discussion}
+
+Briefly summarize your key findings and what their implications are for your research question. Discuss potential weaknesses of your study. Identify potential improvements and extensions or future areas of related research.
+
+# References
