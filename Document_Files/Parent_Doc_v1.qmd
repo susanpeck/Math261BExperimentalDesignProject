@@ -1,0 +1,49 @@
+---
+title: "Power Analysis of Subgroup Representation in Clinical Trials: Evidence from the ACTG 175 Trial"
+author: "Susan Peck, Joseph Burks, Jan Blackburn"
+
+abstract: |
+  This study evaluates whether subgroup representation in clinical trials provides sufficient statistical power to detect meaningful treatment effects. Using the ACTG 175 trial as a case study, we examine how subgroup size and event counts influence the ability to detect heterogeneity in treatment response.
+
+format:
+  pdf:
+    pdf-engine: xelatex
+    toc: false
+    number-sections: true
+    fig-pos: H
+
+bibliography: references.bib
+link-citations: true
+
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+# Introduction
+
+{{< include Child_Intro_v1.qmd >}}
+
+# Data
+
+{{< include Child_Data_v1.qmd >}}
+
+# Methods
+
+{{< include Child_Methods_v1.qmd >}}
+
+# Results
+
+{{< include Child_Results_v1.qmd >}}
+
+# Conclusion
+
+{{< include Child_Conclusion_v1.qmd >}}
+
+
+
+
+
+
+

@@ -1,0 +1,89 @@
+## Survival Analysis Framework
+
+Because the primary endpoint in ACTG 320 is a time-to-event outcome, survival analysis provides the most appropriate statistical framework. Survival analysis accounts for both the timing of events and censoring of data, enabling unbiased estimation of treatment effects. The survival function is defined as
+
+$$
+S(t) = P(T > t),
+$$
+
+where $T$ is the random variable representing the time to event (e.g., progression to AIDS or death), and $t$ is a specific time point [@moore2016_ch2].
+
+A key element of survival analysis is the hazard function describes the instantaneous risk of experiencing the event at time $t$ among individuals who have not yet experienced the event. The hazard function is    
+
+$$
+h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T \ge t)}{\Delta t},
+$$
+
+where $\Delta t$ is a small time interval, and $h(t)$ represents the instantaneous event rate at time $t$ conditional on survival up to time $t$. Unlike the survival function, the hazard function is not a probability but determines how quickly the survival probability declines over time. Higher values of $h(t)$ correspond to a greater risk of the event occurring immediately after time $t$, while lower values indicate slower event occurrence. In the Cox model, comparisons between groups are made through ratios of hazard functions, allowing treatment effects to be interpreted as relative differences in instantaneous risk over time [@moore2016_ch2].
+
+A key feature of survival analysis is that statistical power depends primarily on the number of observed events rather than the total number of participants. In ACTG 320, inference is therefore driven by a relatively small number of progression events. As a result, subgroup analyses may have limited power even when subgroup sample sizes are moderate [@moore2016_ch11].
+
+## Proportional Hazards Model
+
+The Cox proportional hazards model is a semi-parametric regression model that relates the hazard function to a set of covariates without requiring specification of the baseline hazard. Specifically,
+
+$$
+h(t \mid z) = h_0(t)\exp(z\beta),
+$$
+
+where $h_0(t)$ is the baseline hazard function, $z$ is a vector of covariates, and $\beta$ is a vector of regression coefficients.
+
+The model is termed semi-parametric because inference on $\beta$ does not require estimation of $h_0(t)$. Instead, parameters are estimated using the partial likelihood, which is constructed from the ordering of event times and the corresponding risk sets. At each observed event time, the likelihood contribution compares the covariate values of the individual who experienced the event to those of all individuals still at risk at that time.
+
+An important feature of the Cox model is that regression coefficients have a direct interpretation in terms of relative risk. A one-unit increase in a covariate $z_j$ is associated with a multiplicative change of $\exp(\beta_j)$ in the hazard, holding other variables constant. This interpretation is invariant to the baseline hazard and allows for meaningful comparison of treatment effects across groups.
+
+The proportional hazards assumption implies that covariate effects act multiplicatively on the hazard and remain constant over time. When this assumption holds, hazard ratios provide a concise summary of treatment effects across the entire follow-up period. However, if the effect of a covariate varies over time, extensions of the Cox model—such as time-dependent covariates or stratified models—may be required to obtain valid inference.
+
+## Subgroup Effects and Interaction Modeling
+
+To assess heterogeneity in treatment effects, we extend the Cox model to include subgroup indicators and interaction terms: 
+
+$$
+h_i(t) = h_0(t)\exp\left(
+\beta_1 \text{Treatment}_i +
+\beta_2 \text{Subgroup}_i +
+\beta_3 (\text{Treatment}_i \times \text{Subgroup}_i)
+\right),
+$$
+
+where $h_i(t)$ is the hazard for individual $i$, $\text{Treatment}_i$ is an indicator for treatment assignment, $\text{Subgroup}_i$ is an indicator for subgroup membership, and $\beta_1, \beta_2, \beta_3$ are regression coefficients. Testing 
+
+$$
+H_0 : \beta_3 = 0
+$$
+provides a formal assessment of subgroup differences, where $\beta_3$ represents the interaction effect between treatment and subgroup. Since events are partitioned across subgroups, the effective number of events for estimating $\beta_3$ is reduced, often resulting in low power even when true differences exist.
+
+## Power and Event-Based Inference
+
+In survival analysis, power depends primarily on the number of observed events. The number of events required to detect a hazard ratio $HR$ with significance level $\alpha$ and power $1-\beta$ can be approximated by 
+
+$$
+D \approx \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{\left(\log(HR)\right)^2},
+$$
+where $D$ is the required number of events, $\alpha$ is the Type I error rate, $\beta$ is the Type II error rate, and $z_{1-\alpha/2}$ and $z_{1-\beta}$ are standard normal quantiles [@moore2016_ch11].
+
+This relationship highlights that smaller effect sizes require more events. In subgroup analyses, events are further divided across groups, substantially reducing power and limiting the ability to detect treatment heterogeneity.
+
+## Multiplicity and False Discovery Rate Adjustment
+
+When multiple hypotheses are tested, the probability of Type I error increases. The Bonferroni correction adjusts the significance level as 
+
+$$
+\alpha^* = \frac{\alpha}{m},
+$$
+where $\alpha^*$ is the adjusted significance level and $m$ is the number of tests.
+
+We instead control the false discovery rate using the Benjamini–Hochberg procedure. Let 
+$$
+p_{(1)} \le p_{(2)} \le \cdots \le p_{(m)},
+$$
+where $p_{(i)}$ denotes the $i$-th ordered p-value. We select the largest $k$ such that 
+$$
+p_{(k)} \le \frac{k}{m} q,
+$$
+
+where $q$ is the target false discovery rate. Power is estimated as the proportion of true subgroup effects detected after adjustment, recognizing that limited event counts constrain achievable power.
+
+## Power Analysis
+
+In this study, we adopt a retrospective, data-driven approach to power assessment. Using the observed event structure in ACTG 320, we evaluate the ability to detect treatment effects within subgroups of varying sizes. This approach allows us to quantify how reductions in subgroup sample size and event counts impact statistical power, providing insight into whether nonsignificant subgroup findings may reflect true absence of effect or simply limited power.
