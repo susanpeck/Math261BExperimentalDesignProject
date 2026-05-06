@@ -1,0 +1,369 @@
+## R Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(survival)
+library(dplyr)
+library(tibble)
+```
+
+## Read and Prepare Data
+
+```{r read-data, message=FALSE, warning=FALSE}
+actg <- read.csv("actg320.csv")
+
+actg <- actg |>
+  dplyr::mutate(
+    tx = factor(tx, levels = c(0, 1), labels = c("Control", "Indinavir")),
+    sexF = factor(sexF, levels = c(0, 1), labels = c("Male", "Female")),
+    raceth = factor(raceth),
+    strat2 = factor(strat2),
+    event = censor,
+    time_to_event = time
+  )
+```
+
+## Check Event Counts
+
+```{r event-counts, message=FALSE, warning=FALSE}
+overall_events <- actg |>
+  dplyr::summarise(
+    n = dplyr::n(),
+    events = sum(event, na.rm = TRUE),
+    censored = sum(event == 0, na.rm = TRUE),
+    event_rate = mean(event, na.rm = TRUE)
+  )
+
+overall_events
+```
+
+```{r subgroup-event-counts, message=FALSE, warning=FALSE}
+gender_events <- actg |>
+  dplyr::group_by(sexF) |>
+  dplyr::summarise(
+    n = dplyr::n(),
+    events = sum(event, na.rm = TRUE),
+    event_rate = mean(event, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ethnicity_events <- actg |>
+  dplyr::group_by(raceth) |>
+  dplyr::summarise(
+    n = dplyr::n(),
+    events = sum(event, na.rm = TRUE),
+    event_rate = mean(event, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+gender_ethnicity_events <- actg |>
+  dplyr::mutate(
+    gender_ethnicity = interaction(sexF, raceth, drop = TRUE)
+  ) |>
+  dplyr::group_by(gender_ethnicity) |>
+  dplyr::summarise(
+    n = dplyr::n(),
+    events = sum(event, na.rm = TRUE),
+    event_rate = mean(event, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+gender_events
+ethnicity_events
+gender_ethnicity_events
+```
+
+## Kaplan--Meier Curves
+
+```{r km-fit, message=FALSE, warning=FALSE}
+km_fit <- survival::survfit(
+  survival::Surv(time_to_event, event) ~ tx,
+  data = actg
+)
+
+plot(
+  km_fit,
+  xlab = "Follow-up Time",
+  ylab = "Survival Probability Without AIDS or Death",
+  main = "Kaplan-Meier Curves by Treatment Group",
+  lty = 1:2
+)
+
+legend(
+  "bottomleft",
+  legend = levels(actg$tx),
+  lty = 1:2,
+  bty = "n"
+)
+```
+
+## Primary Cox Model: Overall Treatment Effect
+
+```{r cox-primary, message=FALSE, warning=FALSE}
+cox_primary <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx + strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+summary(cox_primary)
+```
+
+## Proportional Hazards Check
+
+```{r ph-primary, message=FALSE, warning=FALSE}
+ph_primary <- survival::cox.zph(cox_primary)
+
+ph_primary
+plot(ph_primary)
+```
+
+## Treatment-by-Gender Interaction Model
+
+```{r cox-gender, message=FALSE, warning=FALSE}
+cox_gender_reduced <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx + sexF + strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+cox_gender_full <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx * sexF + strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+summary(cox_gender_full)
+
+anova(
+  cox_gender_reduced,
+  cox_gender_full,
+  test = "LRT"
+)
+```
+
+## Treatment-by-Ethnicity Interaction Model
+
+```{r cox-ethnicity, message=FALSE, warning=FALSE}
+cox_ethnicity_reduced <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx + raceth + strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+cox_ethnicity_full <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx * raceth + strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+summary(cox_ethnicity_full)
+
+anova(
+  cox_ethnicity_reduced,
+  cox_ethnicity_full,
+  test = "LRT"
+)
+```
+
+## Intersectional Gender-by-Ethnicity Model
+
+```{r cox-intersection, message=FALSE, warning=FALSE}
+actg <- actg |>
+  dplyr::mutate(
+    gender_ethnicity = interaction(sexF, raceth, drop = TRUE)
+  )
+
+cox_intersection_reduced <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx + gender_ethnicity +
+    strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+cox_intersection_full <- survival::coxph(
+  survival::Surv(time_to_event, event) ~ tx * gender_ethnicity +
+    strat2 + cd4 + age + priorzdv + kamof,
+  data = actg,
+  ties = "efron"
+)
+
+summary(cox_intersection_full)
+
+anova(
+  cox_intersection_reduced,
+  cox_intersection_full,
+  test = "LRT"
+)
+```
+
+## Extract Hazard Ratios
+
+```{r hazard-ratios, message=FALSE, warning=FALSE}
+extract_hr <- function(model) {
+  coef_table <- summary(model)$coefficients
+  ci_table <- summary(model)$conf.int
+
+  tibble::tibble(
+    term = rownames(coef_table),
+    beta = coef_table[, "coef"],
+    hazard_ratio = ci_table[, "exp(coef)"],
+    lower_95 = ci_table[, "lower .95"],
+    upper_95 = ci_table[, "upper .95"],
+    p_value = coef_table[, "Pr(>|z|)"]
+  )
+}
+
+primary_hr <- extract_hr(cox_primary)
+gender_hr <- extract_hr(cox_gender_full)
+ethnicity_hr <- extract_hr(cox_ethnicity_full)
+intersection_hr <- extract_hr(cox_intersection_full)
+
+primary_hr
+gender_hr
+ethnicity_hr
+intersection_hr
+```
+
+## Power Functions
+
+```{r power-functions, message=FALSE, warning=FALSE}
+required_events_overall <- function(hr, alpha = 0.05, power = 0.80, allocation = 0.50) {
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+  z_power <- stats::qnorm(power)
+
+  events <- ((z_alpha + z_power)^2) /
+    (allocation * (1 - allocation) * (log(hr)^2))
+
+  events
+}
+
+power_overall <- function(events, hr, alpha = 0.05, allocation = 0.50) {
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+
+  power <- stats::pnorm(
+    sqrt(events * allocation * (1 - allocation)) * abs(log(hr)) - z_alpha
+  )
+
+  power
+}
+
+required_events_interaction_two_groups <- function(
+  hr_group_0,
+  hr_group_1,
+  alpha = 0.05,
+  power = 0.80
+) {
+  delta <- log(hr_group_1) - log(hr_group_0)
+
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+  z_power <- stats::qnorm(power)
+
+  events_per_group <- 8 * (z_alpha + z_power)^2 / (delta^2)
+  total_events <- 2 * events_per_group
+
+  tibble::tibble(
+    delta = delta,
+    events_per_group = events_per_group,
+    total_events = total_events
+  )
+}
+
+power_interaction_two_groups <- function(
+  events_group_0,
+  events_group_1,
+  hr_group_0,
+  hr_group_1,
+  alpha = 0.05
+) {
+  delta <- log(hr_group_1) - log(hr_group_0)
+
+  se_delta <- sqrt(
+    4 / events_group_0 +
+      4 / events_group_1
+  )
+
+  z_alpha <- stats::qnorm(1 - alpha / 2)
+
+  power <- stats::pnorm(abs(delta) / se_delta - z_alpha)
+
+  power
+}
+
+power_multidf_interaction <- function(lambda, df, alpha = 0.05) {
+  critical_value <- stats::qchisq(1 - alpha, df = df)
+
+  power <- 1 - stats::pchisq(
+    critical_value,
+    df = df,
+    ncp = lambda
+  )
+
+  power
+}
+```
+
+## Example Power Calculations
+
+```{r power-examples, message=FALSE, warning=FALSE}
+observed_events <- sum(actg$event, na.rm = TRUE)
+
+required_events_hr_050 <- required_events_overall(
+  hr = 0.50,
+  alpha = 0.05,
+  power = 0.80,
+  allocation = 0.50
+)
+
+observed_power_hr_050 <- power_overall(
+  events = observed_events,
+  hr = 0.50,
+  alpha = 0.05,
+  allocation = 0.50
+)
+
+interaction_events_example <- required_events_interaction_two_groups(
+  hr_group_0 = 0.50,
+  hr_group_1 = 0.80,
+  alpha = 0.05,
+  power = 0.80
+)
+
+interaction_power_example <- power_interaction_two_groups(
+  events_group_0 = 50,
+  events_group_1 = 50,
+  hr_group_0 = 0.50,
+  hr_group_1 = 0.80,
+  alpha = 0.05
+)
+
+multi_df_power_example <- power_multidf_interaction(
+  lambda = 10,
+  df = 3,
+  alpha = 0.05
+)
+
+tibble::tibble(
+  analysis = c(
+    "Required events for HR = 0.50",
+    "Observed power for HR = 0.50",
+    "Example two-group interaction power",
+    "Example multi-df interaction power"
+  ),
+  value = c(
+    required_events_hr_050,
+    observed_power_hr_050,
+    interaction_power_example,
+    multi_df_power_example
+  )
+)
+
+interaction_events_example
+```
+
+## Notes for Interpretation
+
+The overall Cox model estimates whether the indinavir-containing regimen reduces the hazard of AIDS or death relative to control. The interaction models evaluate whether this treatment effect differs by gender, ethnicity, or the intersection of gender and ethnicity.
+
+For subgroup analysis, the primary inferential focus should be the interaction test rather than isolated subgroup-specific treatment tests. A statistically significant interaction provides evidence that the treatment effect differs across groups. A non-significant interaction does not prove equivalence of treatment effects, especially when subgroup event counts are small.
+
+Power in survival analysis is driven primarily by the number of observed events. The overall treatment effect test generally requires fewer events than subgroup interaction tests. Interaction tests require substantially larger event counts because they evaluate differences between treatment effects across groups. Intersectional models typically have the lowest power because events are divided across multiple subgroup combinations.
