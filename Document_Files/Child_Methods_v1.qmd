@@ -1,5 +1,4 @@
-
-Clinical trials evaluating time-to-event outcomes require statistical methods that properly account for censoring and the timing of events. In the context of HIV clinical trials such as ACTG 320, the primary endpoint is the time to progression to AIDS or death. These outcomes are not only binary but are also associated with the duration of follow-up, making survival analysis the appropriate framework.
+Clinical trials evaluating time-to-event outcomes require statistical methods that properly account for censoring and the timing of events. In the context of HIV clinical trials such as ACTG 320, the primary endpoint is the time to progression to AIDS or death, making survival analysis the appropriate framework. The section will start with a review of key concepts in survival analysis and progress to regression model formulations, hypothesis testing and power analysis definitions that are applicable.
 
 ## Survival and Hazard Functions
 
@@ -12,12 +11,12 @@ $$
 This quantity represents the probability that an individual remains event-free beyond time $t$ and provides the basis for survival and hazard analysis. The hazard function is defined as
 
 $$
-h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T > t)}{\Delta t}.
+h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T > t)}{\Delta t} \qquad (1).
 $$
 
 where $\Delta t$ is a small time interval, and $h(t)$ represents the instantaneous event rate at time $t$ conditional on survival up to time $t$ [@moore2016_ch2]. Unlike the survival function, the hazard function is not a probability but determines how quickly the survival probability declines over time. Higher values of $h(t)$ correspond to a greater risk of the event occurring immediately after time $t$, while lower values indicate slower event occurrence. The hazard and survival functions are related by
 
-The hazard and survival functions are related by
+The hazard function can be derived from (1) as the ratio of the pdf of T at time t and the survival function
 
 $$
 h(t) = \frac{f(t)}{S(t)}.
@@ -25,22 +24,17 @@ $$
 
 ## Cox Proportional Hazards Model and Hazard Ratios
 
-The Cox proportional hazards model estimates the association between covariates and the hazard of the event. The model is semi-parametric since it doesn't require specifying the baseline hazard function. For subject $i$ with covariate vector ${X}_i$, the Cox model is
+The Cox proportional hazards model are used in time-to-event clinical studies to estimate the association between covariates and the hazard of the event. The model is semi-parametric since it doesn't require specifying the baseline hazard function. For subject $i$ with covariate vector ${X}_i$, the Cox model is
 
 $$
 h_i(t \mid \mathbf{x}_i) = h_0(t) \exp(\mathbf{x}_i^\top \boldsymbol{\beta}),
-$$
-where ${h}_0(t)$ is the unspecified baseline hazard function and $Beta$ is a vector of regression coefficients. In the Cox model, comparisons between groups are made through ratios of hazard functions, allowing treatment effects to be interpreted as relative differences in instantaneous risk over time [@moore2016_ch2]. For two subjects, with covariate values ${X}_a$ and ${X}_b$, the hazard ratio is
+$$ where ${h}_0(t)$ is the unspecified baseline hazard function and $Beta$ is a vector of regression coefficients. In the Cox model, comparisons between groups are made through ratios of hazard functions, allowing treatment effects to be interpreted as relative differences in instantaneous risk over time [@moore2016_ch2]. The hazard function compares the hazard function between two groups
 
 $$
-\frac{h(t \mid X_a)}{h(t \mid X_b)} = \exp\left[(X_a - X_b)^\top \beta\right]
-$$
+HR = frac{h_T(t) / {h_C(t)}
+$$ where $h_T(t)$ is the hazard function for the treatment group and $h_C(t)$ hazard function for the control group.
 
-For a binary treatment indicator $tx_i$, where $tx_i$ = 1 denotes the active treatment group and $tx_i$ = 1 denotes the control group, the treatment hazard ratio is
-
-$$
-HR = exp(Beta_{tx}).
-$$ A hazard ratio less than one indicates the treatment reduces the instantaneous risk versus the control and a value greater than one indicates a higher instantaneous risk relative to control. Parameters are estimated. Since the hazard ratios don't depend on $t$, they are assumed to be constant over time.
+A hazard ratio less than one indicates the treatment reduces the instantaneous risk versus the control and a value greater than one indicates a higher instantaneous risk relative to control. Parameters are estimated. Since the hazard ratios don't depend on $t$, they are assumed to be constant over time.
 
 The Cox proportional hazards model is estimated using partial likelihood estimation to account for censoring of the data [@moore_ch5]. Let $R(t_i)$ denote the risk set immediately before event time $t_i$. The partial likelihood is
 
@@ -48,13 +42,13 @@ $$
 L(\beta) = \prod_{i:\delta_i=1} 
 \frac{\exp\left(X_i^\top \beta\right)}
 {\sum_{j \in R(t_i)} \exp\left(X_j^\top \beta\right)}.
-$$ 
+$$
 
-Which is converted to the log-likelihood which is maximized to obtain the estimate $\hat{\beta}$.
+The partial likelihood is converted to the log-likelihood which is maximized to obtain the estimate $\hat{\beta}$.
 
 ## Likelihood Ratio Test
 
-Let $\ell(\beta)$ denote the log partial likelihood of the Cox model. To test a hypothesis about a subset of parameters, two models are considered:
+The likelihood ratio test is generally preferred in survival analysis, particularly when the number of observed events is limited, as it relies on comparisons of overall model fit rather than asymptotic normality of individual parameter estimates [@moore_ch5]. Let $\ell(\beta)$ denote the log partial likelihood of the Cox model. To test a hypothesis about a subset of parameters, two models are considered:
 
 -   A **reduced model**, which imposes the null hypothesis constraints, and\
 -   A **full model**, which includes all parameters of interest.
@@ -63,9 +57,7 @@ The likelihood ratio test (LRT) statistic is defined as
 
 $$
 \Lambda = -2\left[\ell(\hat{\beta}_{\text{reduced}}) - \ell(\hat{\beta}_{\text{full}})\right].
-$$
-
-Under standard regularity conditions, and assuming the null hypothesis is true, the test statistic follows an approximate chi-square distribution:
+$$ Under standard regularity conditions, and assuming the null hypothesis is true, the test statistic follows an approximate chi-square distribution:
 
 $$
 \Lambda \sim \chi^2_k,
@@ -79,33 +71,37 @@ $$
 \Lambda > \chi^2_{k,\,1-\alpha}.
 $$
 
-The likelihood ratio test is generally preferred in survival analysis, particularly when the number of observed events is limited, as it relies on comparisons of overall model fit rather than asymptotic normality of individual parameter estimates [@moore_ch5].
-
-## Power and Event-Based Inference
+## Power Estimation for Event-Based Studies
 
 Power calculations for time-to-event analyses are driven primarily by the number of observed events rather than the total sample size. For a two-group comparison, the approximate number of events required to detect a specified hazard ratio $HR$ with significance level $\alpha$ and power $1-\beta$ is
 
-$$
-D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p(1-p)\left[\log(HR)\right]^2},
-$$
-
-where $p$ is the proportion of subjects assigned to the treatment group [Schoenfeld].
-
-This expression highlights that the ability to detect treatment effects depends on both the magnitude of the hazard ratio and the total number of events observed during follow-up. Smaller effect sizes require substantially more events to achieve adequate power.
-
-## Power for Subgroup and Interaction Effects
-
-When evaluating subgroup differences, inference is based on interaction terms rather than main effects. In this setting, the relevant effect size is the difference in treatment effects across subgroups, which can be expressed as a ratio of hazard ratios:
+For a two-group survival comparison, the approximate power for a fixed number of observed events is
 
 $$
-HR_{\text{int}} = \exp(\beta_{\text{interaction}}).
+\text{Power}
+=
+\Phi\left(
+\sqrt{D p(1-p)}\,|\log(HR)|
+-
+z_{1-\alpha/2}
+\right)
 $$
 
-Because interaction effects are estimated from contrasts across subgroups, the effective amount of information is reduced. Consequently, the number of events required to detect subgroup differences is larger than for the overall treatment effect and depends on the distribution of subjects across subgroups.
+where $D$ is the observed or planned number of events, $p$ is the proportion assigned to treatment, $HR$ is the target hazard ratio, $\alpha$ is the two-sided significance level, and $\Phi(\cdot)$ is the standard normal cumulative distribution function.
 
-In general, power for interaction tests decreases when: - subgroup sizes are imbalanced, - the number of subgroups increases, or - the interaction effect size is small.
+For equal allocation, where $p = 0.50$, this becomes
 
-As a result, studies designed to detect heterogeneity in treatment effects must account for these additional requirements, often requiring substantially larger event counts than those needed for primary treatment comparisons.
+$$
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{2}|\log(HR)|
+-
+z_{1-\alpha/2}
+\right).
+$$p \[Schoenfeld\].
+
+This expression highlights that the ability to detect treatment effects depends on both the magnitude of the hazard ratio and the total number of events observed during follow-up. Smaller effect sizes require substantially more events to achieve adequate power [@Schoenfeld1983].
 
 ## Primary Treatment Effect Model
 
@@ -137,7 +133,7 @@ $$
 
 ## Measuring Subgroup Treatment Effects Between Genders
 
-To evaluate whether the treatment effect differs between males and females, the model is expanded to include a gender indicator and a treatment-by-gender interaction term:
+To evaluate whether the treatment effect differs between males and females, the regression model is expanded to include a gender indicator and a treatment-by-gender interaction term:
 
 $$
 h_i(t) =
@@ -149,9 +145,7 @@ h_0(t)\exp\left(
 \right)
 $$
 
-where $G_i$ is a binary gender indicator and $Z_i$ represents additional baseline covariates.
-
-In this model, $\beta_1$ is the treatment effect for the reference gender group, $\beta_2$ is the baseline difference in hazard between gender groups among participants in the control treatment group, and $\beta_3$ is the treatment-by-gender interaction effect.
+where $G_i$ is a binary gender indicator and $Z_i$ represents additional covariates, $\beta_1$ is the treatment effect for the reference gender group, $\beta_2$ is the baseline difference in hazard between gender groups among participants in the control treatment group, and $\beta_3$ is the treatment-by-gender interaction effect.
 
 The treatment hazard ratio for the reference gender group is
 
@@ -221,24 +215,212 @@ Power calculations for survival outcomes are based on the number of observed eve
 
 ## Power for the Overall Treatment Effect
 
-For a two-group comparison of treatment versus control, the required number of events $D$ to detect a specified hazard ratio $HR_T$ with significance level $\alpha$ and power $1 - \beta$ is given by
+For a two-group survival comparison, power can be estimated directly when the number of observed or anticipated events is known. This formulation is useful for sensitivity analysis because the available event count may be fixed by the completed study or by the expected duration of follow-up.
+
+For a two-sided test at significance level $\alpha$, the approximate power is
 
 $$
-D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p_T(1 - p_T)\left[\log(HR_T)\right]^2}
+\text{Power}
+=
+\Phi\left(
+\sqrt{D p(1-p)}\,|\log(HR)|
+-
+z_{1-\alpha/2}
+\right),
 $$
 
-where $p_T$ is the proportion of participants assigned to the treatment group. This formula corresponds to the log-rank test or equivalently the Wald test in a Cox proportional hazards model. The quantity $HR_T = \exp(\beta_1)$ represents the overall treatment effect.
+where $D$ is the total number of observed or anticipated events, $p$ is the proportion assigned to the treatment group, $1-p$ is the proportion assigned to the control group, $HR$ is the target hazard ratio comparing treatment with control, $z_{1-\alpha/2}$ is the standard normal critical value for a two-sided test, and $\Phi(\cdot)$ is the standard normal cumulative distribution function.
 
-This expression highlights that power depends primarily on the number of events and the magnitude of the treatment effect. Smaller deviations of $HR_T$ from 1 require substantially larger numbers of events to achieve adequate power.
+For equal allocation, where $p = 0.50$, this simplifies to
+
+$$
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{2}|\log(HR)|
+-
+z_{1-\alpha/2}
+\right).
+$$ This expression estimates the probability of rejecting the null hypothesis of no treatment effect,
+
+$$
+H_0: HR = 1,
+$$
+
+when the true treatment effect is assumed to be $HR \neq 1$. This is the inverse form of the standard event-count formula for survival analysis and is appropriate for assessing whether the available number of primary endpoint events provides adequate power for detecting a specified hazard ratio..
 
 ## Power for Subgroup Differences: Gender
 
-An approximate expression for the required number of events is
+For subgroup interaction analyses, power can be estimated directly from the anticipated number of observed events. Because interaction effects are estimated from contrasts between subgroup-specific treatment effects, the effective amount of information is reduced relative to the overall treatment comparison. Consequently, substantially larger event counts are typically required to detect treatment effect heterogeneity across subgroups [@Hsieh2000].
+
+For a two-sided interaction test at significance level $\alpha$, the approximate power is
 
 $$
-D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p_T(1 - p_T)\, p_G(1 - p_G)\left[\log(HR_{\text{int}})\right]^2}
+\text{Power}
+=
+\Phi\left(
+\sqrt{
+D \,
+p_T(1-p_T)\,
+p_G(1-p_G)
+}
+\,
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right),
 $$
 
-where $p_G$ is the proportion of participants in one of the gender groups.
+where $D$ is the total number of observed or anticipated events, $p_T$ is the proportion assigned to the treatment group, $p_G$ is the proportion of participants in one of the subgroup categories (for example, one gender subgroup), $HR_{\text{int}}$ is the interaction hazard ratio, $z_{1-\alpha/2}$ is the standard normal critical value for a two-sided test, and $\Phi(\cdot)$ is the standard normal cumulative distribution function [@Hsieh2000]..
 
-This formulation reflects the fact that interaction effects are estimated from contrasts across subgroups, effectively reducing the amount of information available. As a result, detecting subgroup differences requires substantially more events than detecting the overall treatment effect [@Hsieh2000].
+The interaction hazard ratio quantifies the relative difference between subgroup-specific treatment effects. For example, if
+
+$$
+HR_1
+$$
+
+denotes the treatment hazard ratio in subgroup 1 and
+
+$$
+HR_0
+$$
+
+denotes the treatment hazard ratio in subgroup 0, then the interaction hazard ratio is
+
+$$
+HR_{\text{int}}
+=
+\frac{HR_1}{HR_0}.
+$$
+
+Equivalently,
+
+$$
+\log(HR_{\text{int}})
+=
+\log(HR_1)
+-
+\log(HR_0).
+$$
+
+For equal treatment allocation and equally sized subgroups, where
+
+$$
+p_T = 0.50
+\quad \text{and} \quad
+p_G = 0.50,
+$$
+
+the power approximation simplifies to
+
+$$
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{4}
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right).
+$$
+
+This formulation estimates the probability of rejecting the null hypothesis of no treatment-by-subgroup interaction,
+
+$$
+H_0: HR_{\text{int}} = 1,
+$$
+
+when the true interaction effect satisfies
+
+$$
+HR_{\text{int}} \neq 1.
+$$
+
+## Subgroup Power Analysis: Ethnicity
+
+For ethnic subgroup interaction analyses, power can be estimated directly from the anticipated number of observed events. Similar to gender subgroup analyses, interaction effects are estimated from contrasts between subgroup-specific treatment effects, reducing the effective amount of information available relative to the overall treatment comparison. Because multiple ethnic subgroup contrasts are evaluated simultaneously, substantially larger event counts are generally required to detect meaningful treatment effect heterogeneity across ethnic groups [@Hsieh2000].
+
+For a two-sided interaction test at significance level $\alpha$, the approximate power is
+
+$$
+\text{Power}
+=
+\Phi\left(
+\sqrt{
+D \,
+p_T(1-p_T)\,
+p_E(1-p_E)
+}
+\,
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right),
+$$
+
+where $D$ is the total number of observed or anticipated events, $p_T$ is the proportion assigned to the treatment group, $p_E$ is the proportion of participants in one of the ethnic subgroup categories, $HR_{\text{int}}$ is the interaction hazard ratio comparing subgroup-specific treatment effects, $z_{1-\alpha/2}$ is the standard normal critical value for a two-sided test, and $\Phi(\cdot)$ is the standard normal cumulative distribution function [@Hsieh2000].
+
+The interaction hazard ratio quantifies the relative difference between subgroup-specific treatment effects across ethnic groups. For example, if
+
+$$
+HR_1
+$$
+
+denotes the treatment hazard ratio in ethnic subgroup 1 and
+
+$$
+HR_0
+$$
+
+denotes the treatment hazard ratio in the reference ethnic subgroup, then the interaction hazard ratio is
+
+$$
+HR_{\text{int}}
+=
+\frac{HR_1}{HR_0}.
+$$
+
+Equivalently,
+
+$$
+\log(HR_{\text{int}})
+=
+\log(HR_1)
+-
+\log(HR_0).
+$$
+
+For equal treatment allocation and equally sized ethnic subgroup categories, where
+
+$$
+p_T = 0.50
+\quad \text{and} \quad
+p_E = 0.50,
+$$
+
+the power approximation simplifies to
+
+$$
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{4}
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right).
+$$
+
+This formulation estimates the probability of rejecting the null hypothesis of no treatment-by-ethnicity interaction,
+
+$$
+H_0: HR_{\text{int}} = 1,
+$$
+
+when the true interaction effect satisfies
+
+$$
+HR_{\text{int}} \neq 1.
+$$
+
+More generally, when multiple ethnic subgroup categories are analyzed simultaneously, the interaction effect may be interpreted as the relative deviation of each subgroup-specific treatment effect from the reference ethnic subgroup. Because the available number of events is effectively partitioned across several subgroup contrasts, the power for ethnic subgroup interaction analyses is generally lower than the power for the corresponding overall treatment comparison unless the total number of observed events is sufficiently large.
