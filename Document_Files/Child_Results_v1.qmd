@@ -1,1 +1,1 @@
-Awesome results!
+The analysis in this paper was completed using the R statistical package [@R-base] primarily using the survival library [@survival-package]. 

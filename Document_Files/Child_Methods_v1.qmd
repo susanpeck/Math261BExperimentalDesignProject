@@ -99,7 +99,7 @@ $$
 -
 z_{1-\alpha/2}
 \right).
-$$p \[Schoenfeld\].
+$$
 
 This expression highlights that the ability to detect treatment effects depends on both the magnitude of the hazard ratio and the total number of events observed during follow-up. Smaller effect sizes require substantially more events to achieve adequate power [@Schoenfeld1983].
 
@@ -357,70 +357,13 @@ p_E(1-p_E)
 z_{1-\alpha/2}
 \right),
 $$
+$p_T$ is the proportion assigned to the treatment group, $p_E$ is the proportion of participants in one of the ethnic subgroup categories, $HR_{\text{int}}$ is the interaction hazard ratio comparing subgroup-specific treatment effects, $z_{1-\alpha/2}$ is the standard normal critical value for a two-sided test, and $\Phi(\cdot)$ is the standard normal cumulative distribution function [@Hsieh2000].
 
-where $D$ is the total number of observed or anticipated events, $p_T$ is the proportion assigned to the treatment group, $p_E$ is the proportion of participants in one of the ethnic subgroup categories, $HR_{\text{int}}$ is the interaction hazard ratio comparing subgroup-specific treatment effects, $z_{1-\alpha/2}$ is the standard normal critical value for a two-sided test, and $\Phi(\cdot)$ is the standard normal cumulative distribution function [@Hsieh2000].
+## Power Analysis Simulation
 
-The interaction hazard ratio quantifies the relative difference between subgroup-specific treatment effects across ethnic groups. For example, if
+Since there was no power analysis associated with this study, a baseline power analysis on overall treatment effect will be performed as point of reference for power analysis by gender and ethnic subgroups. 
 
-$$
-HR_1
-$$
+To gain a better understanding of number of patients needed to be recruited by subgroup to achieve desired levels of power a simulation will be run to estimate number of events, and indirectly the number of patients that would need to be recruited by subgroup to achieve the desired power. 
 
-denotes the treatment hazard ratio in ethnic subgroup 1 and
+Since there are multiple hypotheses being tested on the same data set, a Bonferroni adjustment will be applied to the significance level of each test to achieve a family wise error rate of $\alpha$ = 0.05. Since we are testing three distinct hypotheses, this will be accomplished by applying a Bonferroni adjustment to the significance used in each individual test statistic so that $\alpha_adj = 0.05 / 3 = 0.017.
 
-$$
-HR_0
-$$
-
-denotes the treatment hazard ratio in the reference ethnic subgroup, then the interaction hazard ratio is
-
-$$
-HR_{\text{int}}
-=
-\frac{HR_1}{HR_0}.
-$$
-
-Equivalently,
-
-$$
-\log(HR_{\text{int}})
-=
-\log(HR_1)
--
-\log(HR_0).
-$$
-
-For equal treatment allocation and equally sized ethnic subgroup categories, where
-
-$$
-p_T = 0.50
-\quad \text{and} \quad
-p_E = 0.50,
-$$
-
-the power approximation simplifies to
-
-$$
-\text{Power}
-=
-\Phi\left(
-\frac{\sqrt{D}}{4}
-|\log(HR_{\text{int}})|
--
-z_{1-\alpha/2}
-\right).
-$$
-
-This formulation estimates the probability of rejecting the null hypothesis of no treatment-by-ethnicity interaction,
-
-$$
-H_0: HR_{\text{int}} = 1,
-$$
-
-when the true interaction effect satisfies
-
-$$
-HR_{\text{int}} \neq 1.
-$$
-
-More generally, when multiple ethnic subgroup categories are analyzed simultaneously, the interaction effect may be interpreted as the relative deviation of each subgroup-specific treatment effect from the reference ethnic subgroup. Because the available number of events is effectively partitioned across several subgroup contrasts, the power for ethnic subgroup interaction analyses is generally lower than the power for the corresponding overall treatment comparison unless the total number of observed events is sufficiently large.
