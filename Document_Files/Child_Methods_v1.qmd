@@ -1,89 +1,244 @@
-## Survival Analysis Framework
 
-Because the primary endpoint in ACTG 320 is a time-to-event outcome, survival analysis provides the most appropriate statistical framework. Survival analysis accounts for both the timing of events and censoring of data, enabling unbiased estimation of treatment effects. The survival function is defined as
+Clinical trials evaluating time-to-event outcomes require statistical methods that properly account for censoring and the timing of events. In the context of HIV clinical trials such as ACTG 320, the primary endpoint is the time to progression to AIDS or death. These outcomes are not only binary but are also associated with the duration of follow-up, making survival analysis the appropriate framework.
 
-$$
-S(t) = P(T > t),
-$$
+## Survival and Hazard Functions
 
-where $T$ is the random variable representing the time to event (e.g., progression to AIDS or death), and $t$ is a specific time point [@moore2016_ch2].
-
-A key element of survival analysis is the hazard function describes the instantaneous risk of experiencing the event at time $t$ among individuals who have not yet experienced the event. The hazard function is    
+Let $T$ denote a non-negative random variable representing the time to the event of interest. The survival function is defined as
 
 $$
-h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T \ge t)}{\Delta t},
+S(t) = P(T > t).
 $$
 
-where $\Delta t$ is a small time interval, and $h(t)$ represents the instantaneous event rate at time $t$ conditional on survival up to time $t$. Unlike the survival function, the hazard function is not a probability but determines how quickly the survival probability declines over time. Higher values of $h(t)$ correspond to a greater risk of the event occurring immediately after time $t$, while lower values indicate slower event occurrence. In the Cox model, comparisons between groups are made through ratios of hazard functions, allowing treatment effects to be interpreted as relative differences in instantaneous risk over time [@moore2016_ch2].
-
-A key feature of survival analysis is that statistical power depends primarily on the number of observed events rather than the total number of participants. In ACTG 320, inference is therefore driven by a relatively small number of progression events. As a result, subgroup analyses may have limited power even when subgroup sample sizes are moderate [@moore2016_ch11].
-
-## Proportional Hazards Model
-
-The Cox proportional hazards model is a semi-parametric regression model that relates the hazard function to a set of covariates without requiring specification of the baseline hazard. Specifically,
+This quantity represents the probability that an individual remains event-free beyond time $t$ and provides the basis for survival and hazard analysis. The hazard function is defined as
 
 $$
-h(t \mid z) = h_0(t)\exp(z\beta),
+h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T > t)}{\Delta t}.
 $$
 
-where $h_0(t)$ is the baseline hazard function, $z$ is a vector of covariates, and $\beta$ is a vector of regression coefficients.
+where $\Delta t$ is a small time interval, and $h(t)$ represents the instantaneous event rate at time $t$ conditional on survival up to time $t$ [@moore2016_ch2]. Unlike the survival function, the hazard function is not a probability but determines how quickly the survival probability declines over time. Higher values of $h(t)$ correspond to a greater risk of the event occurring immediately after time $t$, while lower values indicate slower event occurrence. The hazard and survival functions are related by
 
-The model is termed semi-parametric because inference on $\beta$ does not require estimation of $h_0(t)$. Instead, parameters are estimated using the partial likelihood, which is constructed from the ordering of event times and the corresponding risk sets. At each observed event time, the likelihood contribution compares the covariate values of the individual who experienced the event to those of all individuals still at risk at that time.
-
-An important feature of the Cox model is that regression coefficients have a direct interpretation in terms of relative risk. A one-unit increase in a covariate $z_j$ is associated with a multiplicative change of $\exp(\beta_j)$ in the hazard, holding other variables constant. This interpretation is invariant to the baseline hazard and allows for meaningful comparison of treatment effects across groups.
-
-The proportional hazards assumption implies that covariate effects act multiplicatively on the hazard and remain constant over time. When this assumption holds, hazard ratios provide a concise summary of treatment effects across the entire follow-up period. However, if the effect of a covariate varies over time, extensions of the Cox model—such as time-dependent covariates or stratified models—may be required to obtain valid inference.
-
-## Subgroup Effects and Interaction Modeling
-
-To assess heterogeneity in treatment effects, we extend the Cox model to include subgroup indicators and interaction terms: 
+The hazard and survival functions are related by
 
 $$
-h_i(t) = h_0(t)\exp\left(
-\beta_1 \text{Treatment}_i +
-\beta_2 \text{Subgroup}_i +
-\beta_3 (\text{Treatment}_i \times \text{Subgroup}_i)
-\right),
+h(t) = \frac{f(t)}{S(t)}.
 $$
 
-where $h_i(t)$ is the hazard for individual $i$, $\text{Treatment}_i$ is an indicator for treatment assignment, $\text{Subgroup}_i$ is an indicator for subgroup membership, and $\beta_1, \beta_2, \beta_3$ are regression coefficients. Testing 
+## Cox Proportional Hazards Model and Hazard Ratios
+
+The Cox proportional hazards model estimates the association between covariates and the hazard of the event. The model is semi-parametric since it doesn't require specifying the baseline hazard function. For subject $i$ with covariate vector ${X}_i$, the Cox model is
 
 $$
-H_0 : \beta_3 = 0
+h_i(t \mid \mathbf{x}_i) = h_0(t) \exp(\mathbf{x}_i^\top \boldsymbol{\beta}),
 $$
-provides a formal assessment of subgroup differences, where $\beta_3$ represents the interaction effect between treatment and subgroup. Since events are partitioned across subgroups, the effective number of events for estimating $\beta_3$ is reduced, often resulting in low power even when true differences exist.
+where ${h}_0(t)$ is the unspecified baseline hazard function and $Beta$ is a vector of regression coefficients. In the Cox model, comparisons between groups are made through ratios of hazard functions, allowing treatment effects to be interpreted as relative differences in instantaneous risk over time [@moore2016_ch2]. For two subjects, with covariate values ${X}_a$ and ${X}_b$, the hazard ratio is
+
+$$
+\frac{h(t \mid X_a)}{h(t \mid X_b)} = \exp\left[(X_a - X_b)^\top \beta\right]
+$$
+
+For a binary treatment indicator $tx_i$, where $tx_i$ = 1 denotes the active treatment group and $tx_i$ = 1 denotes the control group, the treatment hazard ratio is
+
+$$
+HR = exp(Beta_{tx}).
+$$ A hazard ratio less than one indicates the treatment reduces the instantaneous risk versus the control and a value greater than one indicates a higher instantaneous risk relative to control. Parameters are estimated. Since the hazard ratios don't depend on $t$, they are assumed to be constant over time.
+
+The Cox proportional hazards model is estimated using partial likelihood estimation to account for censoring of the data [@moore_ch5]. Let $R(t_i)$ denote the risk set immediately before event time $t_i$. The partial likelihood is
+
+$$
+L(\beta) = \prod_{i:\delta_i=1} 
+\frac{\exp\left(X_i^\top \beta\right)}
+{\sum_{j \in R(t_i)} \exp\left(X_j^\top \beta\right)}.
+$$ 
+
+Which is converted to the log-likelihood which is maximized to obtain the estimate $\hat{\beta}$.
+
+## Likelihood Ratio Test
+
+Let $\ell(\beta)$ denote the log partial likelihood of the Cox model. To test a hypothesis about a subset of parameters, two models are considered:
+
+-   A **reduced model**, which imposes the null hypothesis constraints, and\
+-   A **full model**, which includes all parameters of interest.
+
+The likelihood ratio test (LRT) statistic is defined as
+
+$$
+\Lambda = -2\left[\ell(\hat{\beta}_{\text{reduced}}) - \ell(\hat{\beta}_{\text{full}})\right].
+$$
+
+Under standard regularity conditions, and assuming the null hypothesis is true, the test statistic follows an approximate chi-square distribution:
+
+$$
+\Lambda \sim \chi^2_k,
+$$
+
+where $k$ is the number of restrictions imposed under the null hypothesis. For example, $k = 1$ for a single interaction term and $k > 1$ for joint tests involving multiple subgroup effects.
+
+The null hypothesis is rejected at significance level $\alpha$ if
+
+$$
+\Lambda > \chi^2_{k,\,1-\alpha}.
+$$
+
+The likelihood ratio test is generally preferred in survival analysis, particularly when the number of observed events is limited, as it relies on comparisons of overall model fit rather than asymptotic normality of individual parameter estimates [@moore_ch5].
 
 ## Power and Event-Based Inference
 
-In survival analysis, power depends primarily on the number of observed events. The number of events required to detect a hazard ratio $HR$ with significance level $\alpha$ and power $1-\beta$ can be approximated by 
+Power calculations for time-to-event analyses are driven primarily by the number of observed events rather than the total sample size. For a two-group comparison, the approximate number of events required to detect a specified hazard ratio $HR$ with significance level $\alpha$ and power $1-\beta$ is
 
 $$
-D \approx \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{\left(\log(HR)\right)^2},
-$$
-where $D$ is the required number of events, $\alpha$ is the Type I error rate, $\beta$ is the Type II error rate, and $z_{1-\alpha/2}$ and $z_{1-\beta}$ are standard normal quantiles [@moore2016_ch11].
-
-This relationship highlights that smaller effect sizes require more events. In subgroup analyses, events are further divided across groups, substantially reducing power and limiting the ability to detect treatment heterogeneity.
-
-## Multiplicity and False Discovery Rate Adjustment
-
-When multiple hypotheses are tested, the probability of Type I error increases. The Bonferroni correction adjusts the significance level as 
-
-$$
-\alpha^* = \frac{\alpha}{m},
-$$
-where $\alpha^*$ is the adjusted significance level and $m$ is the number of tests.
-
-We instead control the false discovery rate using the Benjamini–Hochberg procedure. Let 
-$$
-p_{(1)} \le p_{(2)} \le \cdots \le p_{(m)},
-$$
-where $p_{(i)}$ denotes the $i$-th ordered p-value. We select the largest $k$ such that 
-$$
-p_{(k)} \le \frac{k}{m} q,
+D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p(1-p)\left[\log(HR)\right]^2},
 $$
 
-where $q$ is the target false discovery rate. Power is estimated as the proportion of true subgroup effects detected after adjustment, recognizing that limited event counts constrain achievable power.
+where $p$ is the proportion of subjects assigned to the treatment group [Schoenfeld].
 
-## Power Analysis
+This expression highlights that the ability to detect treatment effects depends on both the magnitude of the hazard ratio and the total number of events observed during follow-up. Smaller effect sizes require substantially more events to achieve adequate power.
 
-In this study, we adopt a retrospective, data-driven approach to power assessment. Using the observed event structure in ACTG 320, we evaluate the ability to detect treatment effects within subgroups of varying sizes. This approach allows us to quantify how reductions in subgroup sample size and event counts impact statistical power, providing insight into whether nonsignificant subgroup findings may reflect true absence of effect or simply limited power.
+## Power for Subgroup and Interaction Effects
+
+When evaluating subgroup differences, inference is based on interaction terms rather than main effects. In this setting, the relevant effect size is the difference in treatment effects across subgroups, which can be expressed as a ratio of hazard ratios:
+
+$$
+HR_{\text{int}} = \exp(\beta_{\text{interaction}}).
+$$
+
+Because interaction effects are estimated from contrasts across subgroups, the effective amount of information is reduced. Consequently, the number of events required to detect subgroup differences is larger than for the overall treatment effect and depends on the distribution of subjects across subgroups.
+
+In general, power for interaction tests decreases when: - subgroup sizes are imbalanced, - the number of subgroups increases, or - the interaction effect size is small.
+
+As a result, studies designed to detect heterogeneity in treatment effects must account for these additional requirements, often requiring substantially larger event counts than those needed for primary treatment comparisons.
+
+## Primary Treatment Effect Model
+
+The overall treatment effect may be evaluated using a Cox proportional hazards model of the form
+
+$$
+h_i(t) =
+h_0(t)\exp\left(
+\beta_1 T_i
++ \boldsymbol{\beta}_2^{\top}Z_i
+\right)
+$$
+
+where $T_i$ is the treatment indicator and $Z_i$ is a vector of additional baseline covariates. The coefficient $\beta_1$ represents the log hazard ratio for the primary treatment effect after adjusting for the covariates in $Z_i$. The treatment hazard ratio is
+
+$$
+HR_T = \exp(\beta_1)
+$$
+
+The null hypothesis for the overall treatment effect is
+
+$$
+\begin{gathered}
+H_0 : \beta_1 = 0 \quad \text{vs.} \quad H_A : \beta_1 \neq 0 \\
+\text{or equivalently} \\
+H_0 : HR_T = 1 \quad \text{vs.} \quad H_A : HR_T \neq 1
+\end{gathered}
+$$
+
+## Measuring Subgroup Treatment Effects Between Genders
+
+To evaluate whether the treatment effect differs between males and females, the model is expanded to include a gender indicator and a treatment-by-gender interaction term:
+
+$$
+h_i(t) =
+h_0(t)\exp\left(
+\beta_1 T_i
++ \beta_2 G_i
++ \beta_3 T_iG_i
++ \boldsymbol{\beta}_4^{\top}Z_i
+\right)
+$$
+
+where $G_i$ is a binary gender indicator and $Z_i$ represents additional baseline covariates.
+
+In this model, $\beta_1$ is the treatment effect for the reference gender group, $\beta_2$ is the baseline difference in hazard between gender groups among participants in the control treatment group, and $\beta_3$ is the treatment-by-gender interaction effect.
+
+The treatment hazard ratio for the reference gender group is
+
+$$
+HR_{T \mid G = 0} = \exp(\beta_1)
+$$
+
+The treatment hazard ratio for the comparison gender group is
+
+$$
+HR_{T \mid G = 1} = \exp(\beta_1 + \beta_3)
+$$
+
+The hypothesis test for whether the treatment effect differs by gender is
+
+$$
+\begin{gathered}
+H_0 : \beta_3 = 0 \quad \text{vs.} \quad H_A : \beta_3 \neq 0 \\
+\text{or equivalently} \\
+H_0 : exp(\beta_3) = 1 \quad \text{vs.} \quad H_A : exp(\beta_3) \neq 1
+\end{gathered}
+$$
+
+## Measuring Subgroup Treatment Effects Between Ethnic Groups
+
+The same interaction framework can be extended to evaluate whether treatment effects differ across more than two ethnic groups. In the ACTG320 trial, ethnicity is coded as follows: 1 = White non-Hispanic, 2 = Black non-Hispanic, 3 = Hispanic, 4 = Asian or Pacific Islander, 5 = American Indian or Alaska Native, and 6 = Other or unknown.
+
+Using White non-Hispanic participants as the reference group, the model is
+
+$$
+\begin{aligned}
+h_i(t) = h_0(t)\exp\big(&
+\beta_1 T_i
++ \beta_2 Black_i
++ \beta_3 Hispanic_i
++ \beta_4 AsianPI_i
++ \beta_5 AIAN_i
++ \beta_6 Other_i \\
+&+ \beta_7 T_iBlack_i
++ \beta_8 T_iHispanic_i
++ \beta_9 T_iAsianPI_i
++ \beta_{10} T_iAIAN_i
++ \beta_{11} T_iOther_i
++ \boldsymbol{\beta}_{12}^{\top}Z_i
+\big)
+\end{aligned}
+$$
+
+In this model, $\beta_1$ is the treatment effect for White non-Hispanic participants. The coefficients $\beta_2$ through $\beta_6$ represent baseline hazard differences between each ethnic subgroup and the White non-Hispanic reference group among participants in the control treatment group.
+
+The interaction coefficients $\beta_7$ through $\beta_{11}$ measure whether the treatment effect differs between each ethnic subgroup and the White non-Hispanic reference group. The vector $Z_i$ includes additional baseline covariates used for adjustment but not for subgroup treatment-effect testing.
+
+The joint hypothesis test for whether treatment effects differ across ethnic groups is
+
+$$
+\begin{gathered}
+H_0 : \beta_7 = \beta_8 = \beta_9 = \beta_{10} = \beta_{11} = 0 \\
+H_A : \text{At least one interaction coefficient is not equal to zero}
+\end{gathered}
+$$
+
+If the null hypothesis is rejected, there is evidence that the treatment effect differs for at least one ethnic subgroup relative to the White non-Hispanic reference group.
+
+## Power Analysis for Treatment and Subgroup Effects
+
+Power calculations for survival outcomes are based on the number of observed events rather than the total sample size. Under the Cox proportional hazards model, the statistical power to detect treatment effects is driven by the magnitude of the hazard ratio and the total number of events observed during follow-up.
+
+## Power for the Overall Treatment Effect
+
+For a two-group comparison of treatment versus control, the required number of events $D$ to detect a specified hazard ratio $HR_T$ with significance level $\alpha$ and power $1 - \beta$ is given by
+
+$$
+D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p_T(1 - p_T)\left[\log(HR_T)\right]^2}
+$$
+
+where $p_T$ is the proportion of participants assigned to the treatment group. This formula corresponds to the log-rank test or equivalently the Wald test in a Cox proportional hazards model. The quantity $HR_T = \exp(\beta_1)$ represents the overall treatment effect.
+
+This expression highlights that power depends primarily on the number of events and the magnitude of the treatment effect. Smaller deviations of $HR_T$ from 1 require substantially larger numbers of events to achieve adequate power.
+
+## Power for Subgroup Differences: Gender
+
+An approximate expression for the required number of events is
+
+$$
+D = \frac{\left(z_{1-\alpha/2} + z_{1-\beta}\right)^2}{p_T(1 - p_T)\, p_G(1 - p_G)\left[\log(HR_{\text{int}})\right]^2}
+$$
+
+where $p_G$ is the proportion of participants in one of the gender groups.
+
+This formulation reflects the fact that interaction effects are estimated from contrasts across subgroups, effectively reducing the amount of information available. As a result, detecting subgroup differences requires substantially more events than detecting the overall treatment effect [@Hsieh2000].
