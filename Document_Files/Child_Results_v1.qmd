@@ -1,1 +1,862 @@
-The analysis in this paper was completed using the R statistical package [@R-base] primarily using the survival library [@survival-package]. 
+```{r}
+
+# Load packages and prepare data for analysis
+#| label: load-packages
+#| results: asis
+#| echo: false
+#| warning: false
+#| message: false
+
+# Load packages
+library(GLDreg)
+library(survival)
+library(dplyr)
+library(knitr)
+
+# Helper for Quarto/Pandoc-native tables.
+# This avoids kableExtra LaTeX dependencies such as tabu.sty.
+qtable <- function(x, caption, align = NULL, row.names = FALSE, digits = 3) {
+  # Quarto/Pandoc-native table output.
+  # Avoid kableExtra so PDF rendering does not depend on tabu.sty.
+  # Keep digits as a scalar numeric value because knitr::kable() calls round().
+  print(
+    knitr::kable(
+      x,
+      caption = caption,
+      align = align,
+      row.names = row.names,
+      digits = digits,
+      booktabs = knitr::is_latex_output()
+    )
+  )
+}
+
+# Load and prepare data
+data(actg)
+df <- actg
+
+df$karnof <- as.numeric(as.character(df$karnof))
+
+df$idv_label <- factor(
+  df$tx,
+  levels = c(0, 1),
+  labels = c("No Indinavir", "Indinavir")
+)
+
+df$trt_label <- df$idv_label
+
+df$sex_label <- factor(
+  df$sex,
+  levels = 0:1,
+  labels = c("Female", "Male")
+)
+
+df$raceth_label <- factor(
+  df$raceth,
+  levels = 1:5,
+  labels = c("White", "Black", "Hispanic", "Asian/PI", "Other")
+)
+
+df$race_white    <- as.integer(df$raceth == 1)
+df$race_black    <- as.integer(df$raceth == 2)
+df$race_hispanic <- as.integer(df$raceth == 3)
+df$race_asian    <- as.integer(df$raceth == 4)
+df$race_other    <- as.integer(df$raceth == 5)
+
+n_total  <- nrow(df)
+n_events <- sum(df$censor)
+
+```
+
+
+The analysis is organized into four sections: whole group, sex subgroup, race/ethnicity subgroup and power analysis. Analysis and exhibits in this paper was generated using the R statistical package [@R-base] primarily using the survival library [@survival-package].
+
+## Whole Group
+The Kaplan-Meier curves for the control and treatment groups are shown and visually suggest a noticeable reduction in the hazard. 
+
+```{r km-plot, fig.width=7, fig.height=4.5, fig.cap="Kaplan-Meier survival curves for Indinavir versus No Indinavir treatment groups."}
+
+## Kaplan-Meier Survival Curves
+
+km_fit <- survfit(Surv(time, censor) ~ idv_label, data = df)
+
+plot(
+  km_fit,
+  col  = c("black", "steelblue"),
+  lty  = 1,
+  lwd  = 2,
+  xlab = "Days",
+  ylab = "Event-Free Survival Probability",
+  main = "Kaplan-Meier Curves by Treatment Group"
+)
+
+legend(
+  "topright",
+  legend = c("No Indinavir", "Indinavir"),
+  col    = c("black", "steelblue"),
+  lty    = 1,
+  lwd    = 2,
+  bty    = "n",
+  cex    = 0.85
+)
+```
+
+The baseline Cox model includes the following covariates: treatment indicator (tx), baseline CD4 count (cd4), age, Karonfsky performance scale (karnof), months of prior ZDV use (priorzdv) and CD40 cell count stratification (strat2). The regression results are shown in the following table. 
+
+An HR = 0.517 for the treatmen indicator means that at any given point in time, patients receiving indinavir had about half the hazard of experiencing an AIDS-defining event or death compared to patients not receiving indinavir after controlling for the other covariates, which is consistent with what Hammer et al. (1997) reported and confirms your model is reproducing the original study findings.
+
+
+```{r whole-group-model}
+model_baseline <- coxph(
+  Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
+  data = df,
+  ties = "efron"
+)
+```
+
+```{r}
+#| label: whole-group-results
+#| results: asis
+#| echo: false
+#| warning: false
+#| message: false
+
+library(dplyr)
+library(knitr)
+
+s <- summary(model_baseline)
+
+hr_whole <- exp(coef(model_baseline)["tx"])
+ci_whole <- exp(confint(model_baseline)["tx", ])
+
+coef_df <- data.frame(
+  Covariate = rownames(s$coefficients),
+  HR = round(exp(s$coefficients[, "coef"]), 3),
+  `95% CI Lower` = round(exp(s$coefficients[, "coef"] - 1.96 * s$coefficients[, "se(coef)"]), 3),
+  `95% CI Upper` = round(exp(s$coefficients[, "coef"] + 1.96 * s$coefficients[, "se(coef)"]), 3),
+  `p-value` = round(s$coefficients[, "Pr(>|z|)"], 4),
+  check.names = FALSE
+)
+
+coef_df$Covariate <- dplyr::recode(
+  coef_df$Covariate,
+  "tx" = "Treatment: Indinavir vs. No Indinavir",
+  "age" = "Age",
+  "cd4" = "Baseline CD4",
+  "karnof" = "Karnofsky Score",
+  "priorzdv" = "Prior ZDV Use",
+  "strat2" = "CD4 Stratum"
+)
+
+qtable(
+  coef_df,
+  caption = "Whole-Group Baseline Cox Model — Hazard Ratios",
+  align = "lrrrr"
+)
+```
+
+```{r}
+#| label: whole-group-logrank
+#| results: asis
+#| echo: false
+#| warning: false
+#| message: false
+
+logrank_whole <- survdiff(Surv(time, censor) ~ tx, data = df)
+
+lr_chisq <- round(logrank_whole$chisq, 3)
+lr_p <- round(1 - pchisq(logrank_whole$chisq, df = 1), 4)
+
+lr_df <- data.frame(
+  Test = "Log-Rank: Indinavir vs. No Indinavir",
+  `Chi-sq` = lr_chisq,
+  df = 1,
+  `p-value` = lr_p,
+  check.names = FALSE
+)
+```
+
+A log-rank test was used to test overall model significance and based on the chi-square statistic of 10.545 with 1 degree of freedom yields p = 0.0012, which is highly statistically significant indicating that patients receiving indinavir had meaningfully different event timing than those who did not. 
+
+
+## Gender Subgroup
+To test if there is a difference in the treatment effect for men vs. women in the group, two models are fit. The baseline model adds participant `sex` as a fixed covariate alongside treatment. The full model adds a `tx * sex` interaction term to test whether sex *modifies* the treatment effect. A likelihood ratio test compares the two models and then two Cox models are fit within each sex stratum (female-only, male-only) to calculate stratum-specific HRs.
+
+### Gender Baseline Model
+
+Sex is included as a covariate with no interaction, estimating the marginal treatment effect after adjusting for sex. Results shown below show the HR remains unchanged at 0.517. The HR for sex has a highly insignificant p-value indicating that sex has no meaningful impact on the hazard ratio. 
+
+```{r sex-baseline-model}
+model_sex_baseline <- coxph(
+  Surv(time, censor) ~ tx + sex + age + cd4 + karnof + priorzdv + strat2,
+  data = df,
+  ties = "efron"
+)
+
+hr_sex_base <- exp(coef(model_sex_baseline)["tx"])
+ci_sex_base <- exp(confint(model_sex_baseline)["tx", ])
+```
+
+```{r sex-baseline-table, results='asis'}
+s_sb <- summary(model_sex_baseline)
+coef_sb <- data.frame(
+  Covariate = c("Treatment (IDV vs no IDV)", "Sex (Male vs Female)",
+                "Age", "Baseline CD4", "Karnofsky Score",
+                "Prior ZDV Use", "CD4 Stratum"),
+  HR        = round(exp(s_sb$coefficients[, "coef"]), 3),
+  `95% CI Lower` = round(exp(s_sb$coefficients[, "coef"] - 1.96 * s_sb$coefficients[, "se(coef)"]), 3),
+  `95% CI Upper` = round(exp(s_sb$coefficients[, "coef"] + 1.96 * s_sb$coefficients[, "se(coef)"]), 3),
+  `p-value` = round(s_sb$coefficients[, "Pr(>|z|)"], 4),
+  check.names = FALSE
+)
+
+qtable(
+  coef_sb,
+  caption = "Sex Baseline Cox Model — Hazard Ratios",
+  align = "lrrrr"
+)
+```
+
+
+
+### Sex Full Model (Interaction)
+In the full model, the HR for treatment among females (the reference group for sex) is 0.460. This means females receiving indinavir have about 54% lower hazard than females not receiving it which is a statistically significant difference. The interaction HR of 2.034 means the treatment effect in males which means protective effect of indinavir appears *weaker* in males than females. However the 95% CI is very wide and crosses 1.0, and p = 0.2141, so this difference is **not statistically significant**. You cannot conclude from this data that sex genuinely modifies the treatment effect.
+
+```{r sex-full-model}
+model_sex_full <- coxph(
+  Surv(time, censor) ~ tx * sex + age + cd4 + karnof + priorzdv + strat2,
+  data = df,
+  ties = "efron"
+)
+```
+
+```{r sex-full-table, results='asis'}
+s_sf <- summary(model_sex_full)
+coef_sf <- data.frame(
+  Covariate = c("Treatment (IDV vs no IDV)", "Sex (Male vs Female)",
+                "Age", "Baseline CD4", "Karnofsky Score",
+                "Prior ZDV Use", "CD4 Stratum",
+                "Treatment × Sex"),
+  HR        = round(exp(s_sf$coefficients[, "coef"]), 3),
+  `95% CI Lower` = round(exp(s_sf$coefficients[, "coef"] - 1.96 * s_sf$coefficients[, "se(coef)"]), 3),
+  `95% CI Upper` = round(exp(s_sf$coefficients[, "coef"] + 1.96 * s_sf$coefficients[, "se(coef)"]), 3),
+  `p-value` = round(s_sf$coefficients[, "Pr(>|z|)"], 4),
+  check.names = FALSE
+)
+
+qtable(
+  coef_sf,
+  caption = "Sex Full Cox Model with Interaction — Hazard Ratios",
+  align = "lrrrr"
+)
+```
+
+```{r sex-lr-test, results='asis'}
+lr_sex     <- anova(model_sex_baseline, model_sex_full)
+lr_s_chisq <- round(lr_sex[2, "Chisq"], 3)
+lr_s_p <- round(lr_sex[2, "Pr(>|Chi|)"], 4)
+
+lr_s_df <- data.frame(
+  Comparison = "Baseline vs Full (Sex Interaction)",
+  `Chi-sq`   = lr_s_chisq,
+  df         = 1,
+  `p-value`  = lr_s_p,
+  check.names = FALSE
+)
+```
+
+The likelihood ratio test confirms this with a p-value = 0.2187. Adding the interaction term does not significantly improve model fit over the baseline model so we fail to reject the null hypothesis that the treatment effect is meaningfully different between female and male patients. The effect sizes by set are estimated and shown below. 
+
+
+```{r sex-strata, results='asis'}
+sex_strata <- lapply(c(0, 1), function(g) {
+  lbl <- ifelse(g == 0, "Female", "Male")
+  sub <- df[df$sex == g, ]
+  m   <- coxph(Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
+               data = sub, ties = "efron")
+  hr  <- exp(coef(m)["tx"])
+  ci  <- exp(confint(m)["tx", ])
+  data.frame(
+    Subgroup = lbl,
+    n        = nrow(sub),
+    Events   = sum(sub$censor),
+    HR       = round(hr, 3),
+    `95% CI Lower` = round(ci[1], 3),
+    `95% CI Upper` = round(ci[2], 3),
+    check.names = FALSE
+  )
+})
+sex_strata_df <- do.call(rbind, sex_strata)
+
+
+```
+
+With only 15 events in the male stratum, the Cox model has very little information to work with. A general rule of thumb in survival analysis is that you need at least 10–15 events per predictor variable in the model. Your male stratum has 15 events total across 6 predictors — the model is severely underpowered and the estimates are unreliable. For comparison, the Kaplan-Meier survival curves are shown below.
+
+
+## Race/Ethnicity Subgroup
+
+Following the same procedure as with sex subgroups, a baseline with no interactions and full model with interactions are developed and tested. In this case, race/ethnicity is included as a 5-level factor with White as the reference group. 
+
+
+### Baseline Race/Ethnicity Model
+The treament HR = 0.526 means that after adjusting for race/ethnicity as a 5-level factor, patients receiving indinavir had approximately 47% lower hazard of AIDS-defining events or death compared to patients not receiving indinavir. This result suggests that race/ethnicity is a not meaningful confounder of the treatment-outcome relationship like the particpant's gender. 
+
+
+```{r race-baseline-model}
+model_race_baseline <- coxph(
+  Surv(time, censor) ~ tx + raceth_label + age + cd4 + karnof + priorzdv + strat2,
+  data = df,
+  ties = "efron"
+)
+
+hr_race_base <- exp(coef(model_race_baseline)["tx"])
+ci_race_base <- exp(confint(model_race_baseline)["tx", ])
+```
+
+```{r race-baseline-table, results='asis'}
+s_rb <- summary(model_race_baseline)
+coef_rb <- data.frame(
+  Covariate = c("Treatment (IDV vs no IDV)",
+                "Race: Black (vs White)",
+                "Race: Hispanic (vs White)",
+                "Race: Asian/PI (vs White)",
+                "Race: Other (vs White)",
+                "Age", "Baseline CD4", "Karnofsky Score",
+                "Prior ZDV Use", "CD4 Stratum"),
+  HR        = round(exp(s_rb$coefficients[, "coef"]), 3),
+  `95% CI Lower` = round(exp(s_rb$coefficients[, "coef"] - 1.96 * s_rb$coefficients[, "se(coef)"]), 3),
+  `95% CI Upper` = round(exp(s_rb$coefficients[, "coef"] + 1.96 * s_rb$coefficients[, "se(coef)"]), 3),
+  `p-value` = round(s_rb$coefficients[, "Pr(>|z|)"], 4),
+  check.names = FALSE
+)
+
+```
+
+### Race Full Model
+
+The treatment HR for White patients (the reference group) is 0.534, confirming a significant protective effect in White patients specifically.
+
+Among all of the race interaction terms, Black, Hispanic and Other are all insignificant, suggesting no meaningful difference in treatment effect by race. At first glance, Asian/PI appears to be the exception appearing to be highly significant but looking at the bounds of the 95% CI suggests highly unstable estimates due extremely small sample size. 
+
+This is confirmed with the results of the likelihood ratio test with Chi-square = 8.326, df = 4, p = 0.080. The interaction as a whole is **not statistically significant** at the conventional $\\alpha$ = 0.05 threshold, though it approaches significance at $\\alpha$ = 0.10. Formally, it cannot be concluded that race/ethnicity modifies the treatment effect. The borderline p-value is largely being driven by the unstable Asian/PI interaction term. Excluding these observations from the data would reduce the significance level.
+
+The race/ethnicity subgroup analysis is limited by severe sample size constraints in the non-White groups, particularly Asian/PI and Other. The formally correct conclusion is that race/ethnicity does not significantly modify the treatment effect at $\\alpha$ = 0.05.
+
+
+```{r race-full-model}
+model_race_full <- coxph(
+  Surv(time, censor) ~ tx * raceth_label + age + cd4 + karnof + priorzdv + strat2,
+  data = df,
+  ties = "efron"
+)
+```
+
+```{r race-full-table, results='asis'}
+s_rf <- summary(model_race_full)
+coef_rf <- data.frame(
+  Covariate = c("Treatment (IDV vs no IDV)",
+                "Race: Black (vs White)",
+                "Race: Hispanic (vs White)",
+                "Race: Asian/PI (vs White)",
+                "Race: Other (vs White)",
+                "Age", "Baseline CD4", "Karnofsky Score",
+                "Prior ZDV Use", "CD4 Stratum",
+                "Treatment × Black",
+                "Treatment × Hispanic",
+                "Treatment × Asian/PI",
+                "Treatment × Other"),
+  HR        = round(exp(s_rf$coefficients[, "coef"]), 3),
+  `95% CI Lower` = round(exp(s_rf$coefficients[, "coef"] - 1.96 * s_rf$coefficients[, "se(coef)"]), 3),
+  `95% CI Upper` = round(exp(s_rf$coefficients[, "coef"] + 1.96 * s_rf$coefficients[, "se(coef)"]), 3),
+  `p-value` = round(s_rf$coefficients[, "Pr(>|z|)"], 4),
+  check.names = FALSE
+)
+
+qtable(
+  coef_rf,
+  caption = "Race Full Cox Model with Interaction — Hazard Ratios",
+  align = "lrrrr"
+)
+```
+
+```{r race-lr-test, results='asis'}
+lr_race    <- anova(model_race_baseline, model_race_full)
+lr_r_chisq <- round(lr_race[2, "Chisq"], 3)
+lr_r_p <- round(lr_race[2, "Pr(>|Chi|)"], 4)
+
+lr_r_df <- data.frame(
+  Comparison = "Baseline vs Full (Race Interaction)",
+  `Chi-sq`   = lr_r_chisq,
+  df         = 4,
+  `p-value`  = lr_r_p,
+  check.names = FALSE
+)
+
+```
+
+ 
+Below are the estimated race specific effect sizes.
+
+```{r race-strata, results='asis'}
+race_groups <- list(
+  list(var = "race_white",    label = "White"),
+  list(var = "race_black",    label = "Black"),
+  list(var = "race_hispanic", label = "Hispanic"),
+  list(var = "race_asian",    label = "Asian/PI"),
+  list(var = "race_other",    label = "Other")
+)
+
+race_strata <- lapply(race_groups, function(g) {
+  sub <- df[df[[g$var]] == 1, ]
+  m   <- coxph(Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
+               data = sub, ties = "efron")
+  hr  <- exp(coef(m)["tx"])
+  ci  <- exp(confint(m)["tx", ])
+  data.frame(
+    Subgroup = g$label,
+    n        = nrow(sub),
+    Events   = sum(sub$censor),
+    HR       = round(hr, 3),
+    `95% CI Lower` = round(ci[1], 3),
+    `95% CI Upper` = round(ci[2], 3),
+    check.names = FALSE
+  )
+})
+race_strata_df <- do.call(rbind, race_strata)
+
+```
+
+
+## Summary of All Effect Sizes
+The following table summarizes all effect sizes as measured by HR. As can be seen they are stable for overall group, sex and race but become unrealiable at the subgroup level due to the small number of events and in the case of Asian/PI and Other the estimates are completely unreliable.
+
+HR \< 1 indicates indinavir-containing regimens reduce the hazard of AIDS-defining events or death relative to nucleoside-only therapy. Interaction p-values from the LR tests indicate whether subgroup membership significantly modifies the treatment effect. Note that the Asian/PI and Other race subgroups have small sample sizes; confidence intervals for these groups should be interpreted with caution.
+
+```{r summary-table, results='asis'}
+summary_rows <- list(
+  data.frame(Analysis = "Whole Group", Model = "Baseline", Subgroup = "All",
+             n = nrow(df), Events = sum(df$censor),
+             HR = round(hr_whole, 3),
+             Lower = round(ci_whole[1], 3),
+             Upper = round(ci_whole[2], 3)),
+  data.frame(Analysis = "Sex", Model = "Baseline (pooled)", Subgroup = "All",
+             n = nrow(df), Events = sum(df$censor),
+             HR = round(hr_sex_base, 3),
+             Lower = round(ci_sex_base[1], 3),
+             Upper = round(ci_sex_base[2], 3)),
+  data.frame(Analysis = "Sex", Model = "Stratum-specific", Subgroup = "Female",
+             n = sex_strata_df$n[1], Events = sex_strata_df$Events[1],
+             HR = sex_strata_df$HR[1],
+             Lower = sex_strata_df$`95% CI Lower`[1],
+             Upper = sex_strata_df$`95% CI Upper`[1]),
+  data.frame(Analysis = "Sex", Model = "Stratum-specific", Subgroup = "Male",
+             n = sex_strata_df$n[2], Events = sex_strata_df$Events[2],
+             HR = sex_strata_df$HR[2],
+             Lower = sex_strata_df$`95% CI Lower`[2],
+             Upper = sex_strata_df$`95% CI Upper`[2]),
+  data.frame(Analysis = "Race", Model = "Baseline (pooled)", Subgroup = "All",
+             n = nrow(df), Events = sum(df$censor),
+             HR = round(hr_race_base, 3),
+             Lower = round(ci_race_base[1], 3),
+             Upper = round(ci_race_base[2], 3)),
+  data.frame(Analysis = "Race", Model = "Stratum-specific", Subgroup = "White",
+             n = race_strata_df$n[1], Events = race_strata_df$Events[1],
+             HR = race_strata_df$HR[1],
+             Lower = race_strata_df$`95% CI Lower`[1],
+             Upper = race_strata_df$`95% CI Upper`[1]),
+  data.frame(Analysis = "Race", Model = "Stratum-specific", Subgroup = "Black",
+             n = race_strata_df$n[2], Events = race_strata_df$Events[2],
+             HR = race_strata_df$HR[2],
+             Lower = race_strata_df$`95% CI Lower`[2],
+             Upper = race_strata_df$`95% CI Upper`[2]),
+  data.frame(Analysis = "Race", Model = "Stratum-specific", Subgroup = "Hispanic",
+             n = race_strata_df$n[3], Events = race_strata_df$Events[3],
+             HR = race_strata_df$HR[3],
+             Lower = race_strata_df$`95% CI Lower`[3],
+             Upper = race_strata_df$`95% CI Upper`[3]),
+  data.frame(Analysis = "Race", Model = "Stratum-specific", Subgroup = "Asian/PI",
+             n = race_strata_df$n[4], Events = race_strata_df$Events[4],
+             HR = race_strata_df$HR[4],
+             Lower = race_strata_df$`95% CI Lower`[4],
+             Upper = race_strata_df$`95% CI Upper`[4]),
+  data.frame(Analysis = "Race", Model = "Stratum-specific", Subgroup = "Other",
+             n = race_strata_df$n[5], Events = race_strata_df$Events[5],
+             HR = race_strata_df$HR[5],
+             Lower = race_strata_df$`95% CI Lower`[5],
+             Upper = race_strata_df$`95% CI Upper`[5])
+)
+
+summary_df <- do.call(rbind, summary_rows)
+colnames(summary_df)[7:8] <- c("95% CI Lower", "95% CI Upper")
+
+qtable(
+  summary_df,
+  caption = "Summary of Treatment Effect Sizes Across All Analyses",
+  align = "llllrrrr",
+  row.names = FALSE
+)
+```
+
+
+## Initial Observed Power for ACTG 320 Subgroup Analyses
+
+Before estimating the sample sizes needed for future studies, the observed or **effective power** of the ACTG 320 analyses was calculated for the overall study population and for each sex and race/ethnicity subgroup. 
+
+
+Power was estimated assuming $p = 0.50$ is the assumed treatment allocation proportion $\alpha = 0.025$ was used to account for the Bonferroni-adjusted two-sided significance level. These calculations should be interpreted descriptively because observed post hoc power is a function of the estimated effect size and event count.
+
+```{r initial-observed-power, results='asis'}
+# Observed effective power based on observed HRs and event counts
+
+alpha <- 0.025
+allocation <- 0.50
+
+observed_power <- function(hr, events, alpha = 0.025, allocation = 0.50) {
+  z_alpha <- qnorm(1 - alpha / 2)
+
+  power <- pnorm(
+    sqrt(events * allocation * (1 - allocation)) * abs(log(hr)) - z_alpha
+  )
+
+  round(power, 3)
+}
+
+initial_power_df <- data.frame(
+  Analysis = c(
+    "Whole Group",
+    "Sex",
+    "Sex",
+    "Race/Ethnicity",
+    "Race/Ethnicity",
+    "Race/Ethnicity",
+    "Race/Ethnicity",
+    "Race/Ethnicity"
+  ),
+  Subgroup = c(
+    "All",
+    "Female",
+    "Male",
+    "White",
+    "Black",
+    "Hispanic",
+    "Asian/PI",
+    "Other"
+  ),
+  n = c(
+    nrow(df),
+    sex_strata_df$n[sex_strata_df$Subgroup == "Female"],
+    sex_strata_df$n[sex_strata_df$Subgroup == "Male"],
+    race_strata_df$n[race_strata_df$Subgroup == "White"],
+    race_strata_df$n[race_strata_df$Subgroup == "Black"],
+    race_strata_df$n[race_strata_df$Subgroup == "Hispanic"],
+    race_strata_df$n[race_strata_df$Subgroup == "Asian/PI"],
+    race_strata_df$n[race_strata_df$Subgroup == "Other"]
+  ),
+  Events = c(
+    sum(df$censor),
+    sex_strata_df$Events[sex_strata_df$Subgroup == "Female"],
+    sex_strata_df$Events[sex_strata_df$Subgroup == "Male"],
+    race_strata_df$Events[race_strata_df$Subgroup == "White"],
+    race_strata_df$Events[race_strata_df$Subgroup == "Black"],
+    race_strata_df$Events[race_strata_df$Subgroup == "Hispanic"],
+    race_strata_df$Events[race_strata_df$Subgroup == "Asian/PI"],
+    race_strata_df$Events[race_strata_df$Subgroup == "Other"]
+  ),
+  `Observed HR` = c(
+    round(hr_whole, 3),
+    sex_strata_df$HR[sex_strata_df$Subgroup == "Female"],
+    sex_strata_df$HR[sex_strata_df$Subgroup == "Male"],
+    race_strata_df$HR[race_strata_df$Subgroup == "White"],
+    race_strata_df$HR[race_strata_df$Subgroup == "Black"],
+    race_strata_df$HR[race_strata_df$Subgroup == "Hispanic"],
+    race_strata_df$HR[race_strata_df$Subgroup == "Asian/PI"],
+    race_strata_df$HR[race_strata_df$Subgroup == "Other"]
+  ),
+  check.names = FALSE
+)
+
+initial_power_df$`Event Rate` <- round(
+  initial_power_df$Events / initial_power_df$n,
+  3
+)
+
+initial_power_df$`Observed Power` <- mapply(
+  observed_power,
+  hr = initial_power_df$`Observed HR`,
+  events = initial_power_df$Events,
+  MoreArgs = list(alpha = alpha, allocation = allocation)
+)
+
+initial_power_df$Interpretation <- ifelse(
+  initial_power_df$`Observed Power` >= 0.80,
+  "At or above 80%",
+  "Below 80%"
+)
+
+qtable(
+  initial_power_df,
+  caption = "Initial Observed Power by Overall Group and Subgroup",
+  align = "llrrrrrl",
+  row.names = FALSE
+)
+```
+
+The initial power estimates show that the overall study and some larger subgroups had adequate power to detect the observed treatment effect, while smaller subgroups were limited by sparse event counts. In particular, estimates for male, Asian/Pacific Islander, and Other race groups should be interpreted cautiously because their hazard ratios were estimated from very few events, making the calculated power unstable and primarily descriptive.
+
+
+## Power Analysis: Required Sample Sizes for a Future Study
+The subgroup analyses in revealed substantial imbalance in sample sizes across sex and race/ethnicity groups, leaving several subgroups severely underpowered. This section uses the observed effect sizes (HRs) from the stratum-specific models as assumed true effects in a prospective power analysis, estimating the sample sizes a future study would need to reliably detect those effects.
+
+For subgroups with unstable HR estimates (Asian/PI, Other, Male) the analysis uses a **range of plausible HRs** rather than the unreliable observed estimate, to illustrate what sample sizes would be needed to detect effects of various magnitudes.
+
+```{r power-setup}
+# Schoenfeld (1981) formula for required events
+required_events <- function(hr, alpha, power) {
+  z_alpha <- qnorm(1 - alpha / 2)
+  z_beta  <- qnorm(power)
+  d       <- (z_alpha + z_beta)^2 / (log(hr))^2
+  ceiling(d)
+}
+
+# Convert events to sample size using observed event rate
+required_n <- function(hr, alpha, power, event_rate) {
+  d <- required_events(hr, alpha, power)
+  ceiling(d / event_rate)
+}
+
+# Fixed parameters
+alpha      <- 0.025   # Bonferroni for 2 interaction tests
+power_vals <- c(0.80, 0.85, 0.90, 0.95)
+power_labs <- c("80%", "85%", "90%", "95%")
+```
+
+
+### Reliable Subgroups
+
+These subgroups had sufficient events for stable HR estimation.
+
+```{r power-reliable, results='asis'}
+# Observed HRs and event rates from stratum-specific models
+subgroups <- list(
+  list(label = "Whole Group",   hr = 0.517, n = 1151, events = 96),
+  list(label = "Sex: Female",   hr = 0.459, n = 951,  events = 81),
+  list(label = "Race: White",   hr = 0.539, n = 596,  events = 51),
+  list(label = "Race: Black",   hr = 0.287, n = 327,  events = 21),
+  list(label = "Race: Hispanic",hr = 0.628, n = 203,  events = 20)
+)
+
+# Build power table
+power_rows <- lapply(subgroups, function(sg) {
+  event_rate <- sg$events / sg$n
+  ns <- sapply(power_vals, function(pw) {
+    required_n(sg$hr, alpha, pw, event_rate)
+  })
+  evts <- sapply(power_vals, function(pw) {
+    required_events(sg$hr, alpha, pw)
+  })
+  data.frame(
+    Subgroup      = sg$label,
+    `Observed HR` = sg$hr,
+    `Obs. n`      = sg$n,
+    `Obs. Events` = sg$events,
+    `Event Rate`  = round(event_rate, 3),
+    `n (80%)`     = ns[1],
+    `n (85%)`     = ns[2],
+    `n (90%)`     = ns[3],
+    `n (95%)`     = ns[4],
+    check.names   = FALSE
+  )
+})
+
+power_df <- do.call(rbind, power_rows)
+
+qtable(
+  power_df,
+  caption = "Required Sample Sizes by Subgroup and Power Level ($\\alpha$ = 0.025)",
+  align = "lrrrrrrrrr",
+  row.names = FALSE
+)
+```
+
+
+### Underpowered Subgroups — Plausible HR Range
+
+For the male, Asian/PI, and Other subgroups, the observed HRs were unreliable due to very small event counts. Instead, this table shows required sample sizes across a **range of plausible HRs** (0.50 to 0.90), using each subgroup's observed event rate. This illustrates what a future study would need to enroll to detect effects of various magnitudes in these groups.
+```{r power-underpowered, results='asis'}
+# Underpowered subgroups with observed event rates
+underpowered <- list(
+  list(label = "Sex: Male",      n = 200, events = 15),
+  list(label = "Race: Asian/PI", n = 14,  events = 3),
+  list(label = "Race: Other",    n = 11,  events = 1)
+)
+
+# Assumed HR range
+hr_range <- seq(0.5, 0.9, by = 0.1)
+
+# Required sample sizes for 80% power only
+up_rows <- lapply(underpowered, function(sg) {
+  event_rate <- sg$events / sg$n
+
+  data.frame(
+    Subgroup = sg$label,
+    `Assumed HR` = hr_range,
+    `Observed Event Rate` = round(event_rate, 3),
+    `Required n for 80% Power` = sapply(
+      hr_range,
+      function(hr) required_n(hr, alpha, 0.80, event_rate)
+    ),
+    check.names = FALSE
+  )
+})
+
+up_df <- do.call(rbind, up_rows)
+
+qtable(
+  up_df,
+  caption = "Required Sample Sizes for 80% Power Across Assumed Hazard Ratios",
+  align = "llrr",
+  row.names = FALSE
+)
+```
+
+
+### Events Required vs. Sample Size
+
+This table separates the required **number of events** from the required **total sample size** for the reliable subgroups at 80% power, to illustrate how event rate affects study planning.
+
+```{r power-events-table, results='asis'}
+
+# Reliable subgroups
+subgroups <- list(
+  list(label = "Whole Group",    hr = 0.517, n = 1151, events = 96),
+  list(label = "Sex: Female",    hr = 0.459, n = 951,  events = 81),
+  list(label = "Race: White",    hr = 0.539, n = 596,  events = 51),
+  list(label = "Race: Black",    hr = 0.287, n = 327,  events = 21),
+  list(label = "Race: Hispanic", hr = 0.628, n = 203,  events = 20)
+)
+
+evt_rows <- lapply(subgroups, function(sg) {
+
+  event_rate <- sg$events / sg$n
+
+  data.frame(
+    Subgroup = sg$label,
+    `Observed HR` = sg$hr,
+    `Event Rate` = round(event_rate, 3),
+    `Events Required for 80% Power` =
+      required_events(sg$hr, alpha, 0.80),
+
+    `Required n for 80% Power` =
+      required_n(sg$hr, alpha, 0.80, event_rate),
+
+    check.names = FALSE
+  )
+})
+
+evt_df <- do.call(rbind, evt_rows)
+
+qtable(
+  evt_df,
+  caption = "Required Events and Sample Sizes for 80% Power",
+  align = "lrrrr",
+  row.names = FALSE
+)
+```
+
+
+### Power Curve Plot
+
+```{r power-curves, fig.width=7, fig.height=5, fig.cap="Power curves showing achieved power as a function of sample size for each reliable subgroup, with the 80% power threshold shown."}
+# Compute achieved power as function of n for each subgroup
+n_seq <- seq(50, 3000, by = 25)
+
+cols <- c("black", "steelblue", "tomato", "forestgreen", "purple")
+ltys <- rep(1, length(subgroups))
+labels <- sapply(subgroups, function(sg) sg$label)
+
+plot(
+  NULL,
+  xlim = c(50, 3000),
+  ylim = c(0, 1),
+  xlab = "Total Sample Size (n)",
+  ylab = "Statistical Power",
+  main = "Power Curves by Subgroup"
+)
+
+# 80% power reference line only
+abline(h = 0.80, lty = 2, col = "gray40")
+text(2800, 0.82, "80% Power", cex = 0.75, col = "gray40")
+
+for (i in seq_along(subgroups)) {
+  sg <- subgroups[[i]]
+  event_rate <- sg$events / sg$n
+  z_alpha <- qnorm(1 - alpha / 2)
+
+  pwr <- sapply(n_seq, function(n) {
+    d <- n * event_rate
+    se <- 1 / sqrt(d * 0.25)
+    ncp <- abs(log(sg$hr)) / se
+    pnorm(ncp - z_alpha) + pnorm(-ncp - z_alpha)
+  })
+
+  lines(n_seq, pwr, col = cols[i], lwd = 2, lty = ltys[i])
+}
+
+legend(
+  "bottomright",
+  legend = labels,
+  col = cols,
+  lwd = 2,
+  lty = ltys,
+  bty = "n",
+  cex = 0.8
+)
+```
+
+
+### Sample Sizes Required for 80% Power
+
+```{r power-summary, results='asis'}
+# Summary recommendation table for 80% power only
+
+rec_rows <- lapply(subgroups, function(sg) {
+
+  event_rate <- sg$events / sg$n
+
+  n80 <- required_n(
+    sg$hr,
+    alpha,
+    0.80,
+    event_rate
+  )
+
+  adequacy <- ifelse(
+    sg$n >= n80,
+    "Adequate",
+    "Underpowered"
+  )
+
+  data.frame(
+    Subgroup = sg$label,
+    `Observed HR` = sg$hr,
+    `ACTG 320 n` = sg$n,
+    `Required n for 80% Power` = n80,
+    `ACTG 320 Status` = adequacy,
+    check.names = FALSE
+  )
+})
+
+rec_df <- do.call(rbind, rec_rows)
+
+qtable(
+  rec_df,
+  caption = "Adequacy of ACTG 320 Sample Sizes for 80% Power",
+  align = "lrrrl",
+  row.names = FALSE
+)
+```
+
+
+
+

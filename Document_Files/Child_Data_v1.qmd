@@ -6,5 +6,134 @@ The dataset for this paper was obtained from the GLDreg R library [@GLDreg]. The
 
 The publicly available data set does not include data on the secondary outcomes so this paper will focus on power analysis on primary endpoint only. Considering that there 96 of enrolled participants experienced the AIDS or death, the power of any subgroup tests is expected to be low, limiting the precision of any subgroup level estimation treatment effects.
 
+A breakdown of the study participants in terms of control vs. treatment groups and number of participants by gender and race/ethnicity is provided.
+
+```{r}
+#| label: load-packages
+#| results: asis
+#| echo: false
+#| warning: false
+#| message: false
+
+# Load packages
+library(GLDreg)
+library(survival)
+library(dplyr)
+library(knitr)
+
+# Helper for Quarto/Pandoc-native tables.
+# This avoids kableExtra LaTeX dependencies such as tabu.sty.
+qtable <- function(x, caption, align = NULL, row.names = FALSE, digits = 3) {
+  # Quarto/Pandoc-native table output.
+  # Avoid kableExtra so PDF rendering does not depend on tabu.sty.
+  # Keep digits as a scalar numeric value because knitr::kable() calls round().
+  print(
+    knitr::kable(
+      x,
+      caption = caption,
+      align = align,
+      row.names = row.names,
+      digits = digits,
+      booktabs = knitr::is_latex_output()
+    )
+  )
+}
+
+# Load and prepare data
+data(actg)
+df <- actg
+
+df$karnof <- as.numeric(as.character(df$karnof))
+
+df$idv_label <- factor(
+  df$tx,
+  levels = c(0, 1),
+  labels = c("No Indinavir", "Indinavir")
+)
+
+df$trt_label <- df$idv_label
+
+df$sex_label <- factor(
+  df$sex,
+  levels = 0:1,
+  labels = c("Female", "Male")
+)
+
+df$raceth_label <- factor(
+  df$raceth,
+  levels = 1:5,
+  labels = c("White", "Black", "Hispanic", "Asian/PI", "Other")
+)
+
+df$race_white    <- as.integer(df$raceth == 1)
+df$race_black    <- as.integer(df$raceth == 2)
+df$race_hispanic <- as.integer(df$raceth == 3)
+df$race_asian    <- as.integer(df$raceth == 4)
+df$race_other    <- as.integer(df$raceth == 5)
+
+n_total  <- nrow(df)
+n_events <- sum(df$censor)
+
+trt_table <- as.data.frame(table(df$idv_label))
+colnames(trt_table) <- c("Treatment Group", "n")
+
+trt_table$`%` <- round(
+  100 * trt_table$n / n_total,
+  1
+)
+
+qtable(
+  trt_table,
+  caption = "Treatment Group Distribution: Indinavir vs. No Indinavir",
+  align = "lrr"
+)
+
+sub_table <- data.frame(
+  Variable = c(
+    "Sex: Female",
+    "Sex: Male",
+    "Race: White",
+    "Race: Black",
+    "Race: Hispanic",
+    "Race: Asian/PI",
+    "Race: Other"
+  ),
+  n = c(
+    sum(df$sex == 0),
+    sum(df$sex == 1),
+    sum(df$race_white),
+    sum(df$race_black),
+    sum(df$race_hispanic),
+    sum(df$race_asian),
+    sum(df$race_other)
+  ),
+  Events = c(
+    sum(df$censor[df$sex == 0]),
+    sum(df$censor[df$sex == 1]),
+    sum(df$censor[df$race_white == 1]),
+    sum(df$censor[df$race_black == 1]),
+    sum(df$censor[df$race_hispanic == 1]),
+    sum(df$censor[df$race_asian == 1]),
+    sum(df$censor[df$race_other == 1])
+  )
+)
+
+sub_table$`%` <- round(
+  100 * sub_table$n / n_total,
+  1
+)
+
+sub_table$`Event Rate (%)` <- round(
+  100 * sub_table$Events / sub_table$n,
+  1
+)
+
+qtable(
+  sub_table,
+  caption = "Subgroup Sample Sizes and Event Rates",
+  align = "lrrrr"
+)
+```
+
 
 

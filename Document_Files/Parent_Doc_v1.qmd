@@ -1,9 +1,12 @@
 ---
-title: "Power Analysis of Subgroup Representation in Clinical Trials: Evidence from the ACTG 175 Trial"
+title: "Power Analysis of Subgroup Representation in Clinical Trials: Evidence from the ACTG 320 Trial"
 author: "Susan Peck, Joseph Burks, Jan Blackburn"
 
 abstract: |
-  This study evaluates whether subgroup representation in clinical trials provides sufficient statistical power to detect meaningful treatment effects. Using the ACTG 175 trial as a case study, we examine how subgroup size and event counts influence the ability to detect heterogeneity in treatment response.
+  ## Abstract
+
+  Clinical trials are typically powered to detect treatment effects in the overall study population rather than within demographic subgroups, potentially limiting the ability to identify meaningful differences in treatment effects. Using the ACTG 320 HIV clinical trial as a case study, this paper evaluates how subgroup representation and event counts influence statistical power in time-to-event analyses. Cox proportional hazards models, likelihood ratio tests, Kaplan–Meier curves, and event-driven power analyses were used to evaluate treatment effects overall and across sex and race/ethnicity subgroups. Indinavir-containing therapy significantly reduced the hazard of progression to AIDS or death by approximately 48%, reproducing the original study findings. No statistically significant subgroup interaction effects were detected; however, several demographic subgroups, particularly male, Asian/Pacific Islander, and Other race groups, exhibited unstable hazard ratio estimates due to low event counts and insufficient power. Power simulations demonstrated that substantially larger subgroup sample sizes would be required to reliably detect moderate interaction effects. These findings highlight that statistical power in survival analysis is driven primarily by observed events rather than enrollment counts alone and emphasize the importance of adequate subgroup representation in clinical trial design.
+
 
 format:
   pdf:
@@ -41,7 +44,9 @@ execute:
 
 {{< include Child_Conclusion_v1.qmd >}}
 
+\newpage
 
+# References
 
 
 
