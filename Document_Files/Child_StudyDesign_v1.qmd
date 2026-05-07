@@ -1,0 +1,47 @@
+## Experimental Design
+
+The ACTG 320 trial [@Hammer1997] was a multicenter, randomized, double-blind, 
+placebo-controlled clinical trial evaluating whether adding the protease inhibitor 
+indinavir to a standard two-drug nucleoside analogue regimen improved outcomes in 
+HIV-infected patients with CD4 cell counts of 200 cells/mm?? or fewer. A total of 
+1,156 adults were enrolled across multiple clinical sites and randomized in 
+approximately equal proportions to control (two-drug regimen plus placebo) or 
+treatment (two-drug regimen plus indinavir). Randomization was stratified by 
+baseline CD4 count --- separately for counts below 50 cells/mm?? and counts between 
+51 and 200 cells/mm?? --- making stratified randomization the blocking mechanism 
+that ensures balance on the most important prognostic variable across treatment 
+arms. The double-blind, placebo-controlled structure prevented knowledge of 
+treatment assignment from influencing outcome ascertainment.
+
+## Response Variable and Factors
+
+The primary response variable is time-to-event: days from randomization to 
+progression to an AIDS-defining illness or death, whichever occurred first. 
+Participants who experienced neither outcome were censored at last contact. The 
+primary factor of interest is treatment assignment (indinavir versus control). 
+This paper additionally examines participant sex (female versus male) and 
+race/ethnicity (White non-Hispanic, Black non-Hispanic, Hispanic, Asian/Pacific 
+Islander, and Other) as potential effect modifiers. All models adjust for the 
+following baseline covariates: age, CD4 cell count, Karnofsky performance score, 
+months of prior ZDV use, and CD4 count stratum.
+
+## Strengths and Weaknesses
+
+The design's strengths are substantial: randomization eliminates confounding in 
+expectation, double-blinding prevents ascertainment bias, and stratified 
+randomization ensures balance on disease severity. The large overall enrollment 
+provided strong power for the primary comparison and the trial produced a landmark 
+finding that transformed HIV treatment.
+
+The primary weakness for the purposes of this reanalysis is that the trial was 
+not designed to support subgroup inference. No minimum subgroup sample sizes or 
+event count targets were specified for demographic groups. The result is a highly 
+asymmetric event distribution: female participants contribute 81 of the 96 
+observed events while the male stratum contributes only 15, fewer than the minimum 
+of 10 to 15 events per predictor typically required for stable Cox model 
+estimation. The Asian/Pacific Islander and Other subgroups contribute 3 and 1 
+events respectively, making subgroup-specific estimates for these groups entirely 
+unreliable. Additionally, the publicly available dataset omits the trial's 
+secondary endpoints and the American Indian/Alaska Native race category present 
+in the original protocol, restricting this reanalysis to the primary outcome 
+across five race/ethnicity groups.

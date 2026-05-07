@@ -1,0 +1,892 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{5}
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
+  % turn on hanging indent if param 1 is 1
+  \ifodd #1
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
+  \fi
+  % set entry spacing
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
+\usepackage{calc}
+\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Power Analysis of Subgroup Representation in Clinical Trials: Evidence from the ACTG 175 Trial},
+  pdfauthor={Susan Peck, Joseph Burks, Jan Blackburn},
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\title{Power Analysis of Subgroup Representation in Clinical Trials:
+Evidence from the ACTG 175 Trial}
+\author{Susan Peck, Joseph Burks, Jan Blackburn}
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+This study evaluates whether subgroup representation in clinical trials
+provides sufficient statistical power to detect meaningful treatment
+effects. Using the ACTG 175 trial as a case study, we examine how
+subgroup size and event counts influence the ability to detect
+heterogeneity in treatment response.
+\end{abstract}
+
+
+\section{Introduction}\label{introduction}
+
+Randomized clinical trials are typically powered to detect treatment
+effects in the overall study population rather than within demographic
+subgroups. This can lead to underrepresentation for female and minority
+ethnic groups, reducing the effective power of statistical tests and the
+ability to detect critical differences in treatment effects. Prior work
+has shown underrepresentation of women and ethnic minority groups in
+pivotal clinical trials across therapeutic areas
+(\citeproc{ref-khan2020women}{Khan et al. 2020};
+\citeproc{ref-poon2013participation}{Poon et al. 2013};
+\citeproc{ref-eshera2015demographics}{Eshera et al. 2015}).
+
+A key feature of many clinical trials, including ACTG 320, is that
+outcomes are measured as time-to-event outcomes and analyzed using
+survival analysis methods. In this framework, statistical inference is
+driven by the number of observed events (e.g., disease progression or
+death) instead of the number of participants enrolled. As a result,
+subgroups with smaller sample sizes tend to yield fewer events, which
+can substantially reduce the power to detect treatment effects.
+
+This distinction between sample size and event count is central to the
+present study. Even when treatment effects differ across demographic
+groups, studies may lack sufficient statistical power to detect these
+differences if the number of observed events is small. This creates a
+structural limitation in subgroup analysis that is not always apparent
+when focusing solely on enrollment counts.
+
+The purpose of this paper is to use the ACTG 320 clinical trial
+(\citeproc{ref-hammer1997controlled}{Hammer et al. 1997}) as a case
+study to investigate how underrepresentation in gender and ethnic
+subgroups impacts the statistical power to detect clinically meaningful
+treatment effects.
+
+The rest of this paper discusses the ACTG320 data set elements and
+limitations, provides a brief overview of key survival analysis concepts
+including hazard functions, Cox proportional hazards models and how
+hypothesis testing and power analysis are applied in this context. The
+paper concludes with a discussion of the results, implications and areas
+for further research.
+
+\section{Data}\label{data}
+
+The ACTG 320 dataset is derived from a randomized, double-blind clinical
+trial evaluating the efficacy of combination antiretroviral therapy in
+HIV-infected patients with advanced disease (CD4 cell counts ≤ 200
+cells/mm³). Participants were stratified by their CD4 cell counts at
+enrollment for those with CD4 cell count \textless{} 50 and patients
+with CD4 cell count 51 - 200 cells/mm³). Patients in each group were
+randomly assigned to receive either a two-drug nucleoside regimen with a
+placebo or a three-drug regimen that included the protease inhibitor
+indinavir.
+
+The study's primary endpoint is a time-to-event defined as either
+progression to AIDS or death. A total of 1,156 patients participated in
+the trial but only 96 experienced progression to AIDS or death during
+follow-up. Researchers also investigated two secondary endpoints:
+changes in CD40 cell levels tracked at intervals during the study and
+changes in plasma HIV-1 RNA concentrations.
+
+The dataset for this paper was obtained from the GLDreg R library
+(\citeproc{ref-GLDreg}{Su et al. 2023}). The file contains participant
+level records that include treatment assignment, baseline clinical
+characteristics (e.g., CD4 count, prior antiretroviral therapy),
+demographic variables, and follow-up information on clinical. There are
+also subgroup indicators (e.g., sex and race/ethnicity), which allow for
+investigation of treatment effect heterogeneity and, importantly for
+this study, assessment of how reduced subgroup sample sizes and event
+counts impact statistical power.
+
+The publicly available data set does not include data on the secondary
+outcomes so this paper will focus on power analysis on primary endpoint
+only. Considering that there 96 of enrolled participants experienced the
+AIDS or death, the power of any subgroup tests is expected to be low,
+limiting the precision of any subgroup level estimation treatment
+effects.
+
+\section{Methods}\label{methods}
+
+Clinical trials evaluating time-to-event outcomes require statistical
+methods that properly account for censoring and the timing of events. In
+the context of HIV clinical trials such as ACTG 320, the primary
+endpoint is the time to progression to AIDS or death, making survival
+analysis the appropriate framework. The section will start with a review
+of key concepts in survival analysis and progress to regression model
+formulations, hypothesis testing and power analysis definitions that are
+applicable.
+
+\subsection{Survival and Hazard
+Functions}\label{survival-and-hazard-functions}
+
+Let \(T\) denote a non-negative random variable representing the time to
+the event of interest. The survival function is defined as
+
+\[
+S(t) = P(T > t).
+\]
+
+This quantity represents the probability that an individual remains
+event-free beyond time \(t\) and provides the basis for survival and
+hazard analysis. The hazard function is defined as
+
+\[
+h(t) = \lim_{\Delta t \to 0} \frac{P(t \le T < t+\Delta t \mid T > t)}{\Delta t} \qquad (1).
+\]
+
+where \(\Delta t\) is a small time interval, and \(h(t)\) represents the
+instantaneous event rate at time \(t\) conditional on survival up to
+time \(t\) (\citeproc{ref-moore2016_ch2}{Moore 2016}). Unlike the
+survival function, the hazard function is not a probability but
+determines how quickly the survival probability declines over time.
+Higher values of \(h(t)\) correspond to a greater risk of the event
+occurring immediately after time \(t\), while lower values indicate
+slower event occurrence. The hazard and survival functions are related
+by
+
+The hazard function can be derived from (1) as the ratio of the pdf of T
+at time t and the survival function
+
+\[
+h(t) = \frac{f(t)}{S(t)}.
+\]
+
+\subsection{Cox Proportional Hazards Model and Hazard
+Ratios}\label{cox-proportional-hazards-model-and-hazard-ratios}
+
+The Cox proportional hazards model are used in time-to-event clinical
+studies to estimate the association between covariates and the hazard of
+the event. The model is semi-parametric since it doesn't require
+specifying the baseline hazard function. For subject \(i\) with
+covariate vector \({X}_i\), the Cox model is
+
+\[
+h_i(t \mid \mathbf{x}_i) = h_0(t) \exp(\mathbf{x}_i^\top \boldsymbol{\beta}),
+\] where \({h}_0(t)\) is the unspecified baseline hazard function and
+\(Beta\) is a vector of regression coefficients. In the Cox model,
+comparisons between groups are made through ratios of hazard functions,
+allowing treatment effects to be interpreted as relative differences in
+instantaneous risk over time (\citeproc{ref-moore2016_ch2}{Moore 2016}).
+The hazard function compares the hazard function between two groups
+
+\[
+HR = frac{h_T(t) / {h_C(t)}
+\] where \(h_T(t)\) is the hazard function for the treatment group and
+\(h_C(t)\) hazard function for the control group.
+
+A hazard ratio less than one indicates the treatment reduces the
+instantaneous risk versus the control and a value greater than one
+indicates a higher instantaneous risk relative to control. Parameters
+are estimated. Since the hazard ratios don't depend on \(t\), they are
+assumed to be constant over time.
+
+The Cox proportional hazards model is estimated using partial likelihood
+estimation to account for censoring of the data
+(\citeproc{ref-moore_ch5}{\textbf{moore\_ch5?}}). Let \(R(t_i)\) denote
+the risk set immediately before event time \(t_i\). The partial
+likelihood is
+
+\[
+L(\beta) = \prod_{i:\delta_i=1} 
+\frac{\exp\left(X_i^\top \beta\right)}
+{\sum_{j \in R(t_i)} \exp\left(X_j^\top \beta\right)}.
+\]
+
+The partial likelihood is converted to the log-likelihood which is
+maximized to obtain the estimate \(\hat{\beta}\).
+
+\subsection{Likelihood Ratio Test}\label{likelihood-ratio-test}
+
+The likelihood ratio test is generally preferred in survival analysis,
+particularly when the number of observed events is limited, as it relies
+on comparisons of overall model fit rather than asymptotic normality of
+individual parameter estimates
+(\citeproc{ref-moore_ch5}{\textbf{moore\_ch5?}}). Let \(\ell(\beta)\)
+denote the log partial likelihood of the Cox model. To test a hypothesis
+about a subset of parameters, two models are considered:
+
+\begin{itemize}
+\tightlist
+\item
+  A \textbf{reduced model}, which imposes the null hypothesis
+  constraints, and\\
+\item
+  A \textbf{full model}, which includes all parameters of interest.
+\end{itemize}
+
+The likelihood ratio test (LRT) statistic is defined as
+
+\[
+\Lambda = -2\left[\ell(\hat{\beta}_{\text{reduced}}) - \ell(\hat{\beta}_{\text{full}})\right].
+\] Under standard regularity conditions, and assuming the null
+hypothesis is true, the test statistic follows an approximate chi-square
+distribution:
+
+\[
+\Lambda \sim \chi^2_k,
+\]
+
+where \(k\) is the number of restrictions imposed under the null
+hypothesis. For example, \(k = 1\) for a single interaction term and
+\(k > 1\) for joint tests involving multiple subgroup effects.
+
+The null hypothesis is rejected at significance level \(\alpha\) if
+
+\[
+\Lambda > \chi^2_{k,\,1-\alpha}.
+\]
+
+\subsection{Power Estimation for Event-Based
+Studies}\label{power-estimation-for-event-based-studies}
+
+Power calculations for time-to-event analyses are driven primarily by
+the number of observed events rather than the total sample size. For a
+two-group comparison, the approximate number of events required to
+detect a specified hazard ratio \(HR\) with significance level
+\(\alpha\) and power \(1-\beta\) is
+
+For a two-group survival comparison, the approximate power for a fixed
+number of observed events is
+
+\[
+\text{Power}
+=
+\Phi\left(
+\sqrt{D p(1-p)}\,|\log(HR)|
+-
+z_{1-\alpha/2}
+\right)
+\]
+
+where \(D\) is the observed or planned number of events, \(p\) is the
+proportion assigned to treatment, \(HR\) is the target hazard ratio,
+\(\alpha\) is the two-sided significance level, and \(\Phi(\cdot)\) is
+the standard normal cumulative distribution function.
+
+For equal allocation, where \(p = 0.50\), this becomes
+
+\[
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{2}|\log(HR)|
+-
+z_{1-\alpha/2}
+\right).
+\]
+
+This expression highlights that the ability to detect treatment effects
+depends on both the magnitude of the hazard ratio and the total number
+of events observed during follow-up. Smaller effect sizes require
+substantially more events to achieve adequate power
+(\citeproc{ref-Schoenfeld1983}{Schoenfeld 1983}).
+
+\subsection{Primary Treatment Effect
+Model}\label{primary-treatment-effect-model}
+
+The overall treatment effect may be evaluated using a Cox proportional
+hazards model of the form
+
+\[
+h_i(t) =
+h_0(t)\exp\left(
+\beta_1 T_i
++ \boldsymbol{\beta}_2^{\top}Z_i
+\right)
+\]
+
+where \(T_i\) is the treatment indicator and \(Z_i\) is a vector of
+additional baseline covariates. The coefficient \(\beta_1\) represents
+the log hazard ratio for the primary treatment effect after adjusting
+for the covariates in \(Z_i\). The treatment hazard ratio is
+
+\[
+HR_T = \exp(\beta_1)
+\]
+
+The null hypothesis for the overall treatment effect is
+
+\[
+\begin{gathered}
+H_0 : \beta_1 = 0 \quad \text{vs.} \quad H_A : \beta_1 \neq 0 \\
+\text{or equivalently} \\
+H_0 : HR_T = 1 \quad \text{vs.} \quad H_A : HR_T \neq 1
+\end{gathered}
+\]
+
+\subsection{Measuring Subgroup Treatment Effects Between
+Genders}\label{measuring-subgroup-treatment-effects-between-genders}
+
+To evaluate whether the treatment effect differs between males and
+females, the regression model is expanded to include a gender indicator
+and a treatment-by-gender interaction term:
+
+\[
+h_i(t) =
+h_0(t)\exp\left(
+\beta_1 T_i
++ \beta_2 G_i
++ \beta_3 T_iG_i
++ \boldsymbol{\beta}_4^{\top}Z_i
+\right)
+\]
+
+where \(G_i\) is a binary gender indicator and \(Z_i\) represents
+additional covariates, \(\beta_1\) is the treatment effect for the
+reference gender group, \(\beta_2\) is the baseline difference in hazard
+between gender groups among participants in the control treatment group,
+and \(\beta_3\) is the treatment-by-gender interaction effect.
+
+The treatment hazard ratio for the reference gender group is
+
+\[
+HR_{T \mid G = 0} = \exp(\beta_1)
+\]
+
+The treatment hazard ratio for the comparison gender group is
+
+\[
+HR_{T \mid G = 1} = \exp(\beta_1 + \beta_3)
+\]
+
+The hypothesis test for whether the treatment effect differs by gender
+is
+
+\[
+\begin{gathered}
+H_0 : \beta_3 = 0 \quad \text{vs.} \quad H_A : \beta_3 \neq 0 \\
+\text{or equivalently} \\
+H_0 : exp(\beta_3) = 1 \quad \text{vs.} \quad H_A : exp(\beta_3) \neq 1
+\end{gathered}
+\]
+
+\subsection{Measuring Subgroup Treatment Effects Between Ethnic
+Groups}\label{measuring-subgroup-treatment-effects-between-ethnic-groups}
+
+The same interaction framework can be extended to evaluate whether
+treatment effects differ across more than two ethnic groups. In the
+ACTG320 trial, ethnicity is coded as follows: 1 = White non-Hispanic, 2
+= Black non-Hispanic, 3 = Hispanic, 4 = Asian or Pacific Islander, 5 =
+American Indian or Alaska Native, and 6 = Other or unknown.
+
+Using White non-Hispanic participants as the reference group, the model
+is
+
+\[
+\begin{aligned}
+h_i(t) = h_0(t)\exp\big(&
+\beta_1 T_i
++ \beta_2 Black_i
++ \beta_3 Hispanic_i
++ \beta_4 AsianPI_i
++ \beta_5 AIAN_i
++ \beta_6 Other_i \\
+&+ \beta_7 T_iBlack_i
++ \beta_8 T_iHispanic_i
++ \beta_9 T_iAsianPI_i
++ \beta_{10} T_iAIAN_i
++ \beta_{11} T_iOther_i
++ \boldsymbol{\beta}_{12}^{\top}Z_i
+\big)
+\end{aligned}
+\]
+
+In this model, \(\beta_1\) is the treatment effect for White
+non-Hispanic participants. The coefficients \(\beta_2\) through
+\(\beta_6\) represent baseline hazard differences between each ethnic
+subgroup and the White non-Hispanic reference group among participants
+in the control treatment group.
+
+The interaction coefficients \(\beta_7\) through \(\beta_{11}\) measure
+whether the treatment effect differs between each ethnic subgroup and
+the White non-Hispanic reference group. The vector \(Z_i\) includes
+additional baseline covariates used for adjustment but not for subgroup
+treatment-effect testing.
+
+The joint hypothesis test for whether treatment effects differ across
+ethnic groups is
+
+\[
+\begin{gathered}
+H_0 : \beta_7 = \beta_8 = \beta_9 = \beta_{10} = \beta_{11} = 0 \\
+H_A : \text{At least one interaction coefficient is not equal to zero}
+\end{gathered}
+\]
+
+If the null hypothesis is rejected, there is evidence that the treatment
+effect differs for at least one ethnic subgroup relative to the White
+non-Hispanic reference group.
+
+\subsection{Power Analysis for Treatment and Subgroup
+Effects}\label{power-analysis-for-treatment-and-subgroup-effects}
+
+Power calculations for survival outcomes are based on the number of
+observed events rather than the total sample size. Under the Cox
+proportional hazards model, the statistical power to detect treatment
+effects is driven by the magnitude of the hazard ratio and the total
+number of events observed during follow-up.
+
+\subsection{Power for the Overall Treatment
+Effect}\label{power-for-the-overall-treatment-effect}
+
+For a two-group survival comparison, power can be estimated directly
+when the number of observed or anticipated events is known. This
+formulation is useful for sensitivity analysis because the available
+event count may be fixed by the completed study or by the expected
+duration of follow-up.
+
+For a two-sided test at significance level \(\alpha\), the approximate
+power is
+
+\[
+\text{Power}
+=
+\Phi\left(
+\sqrt{D p(1-p)}\,|\log(HR)|
+-
+z_{1-\alpha/2}
+\right),
+\]
+
+where \(D\) is the total number of observed or anticipated events, \(p\)
+is the proportion assigned to the treatment group, \(1-p\) is the
+proportion assigned to the control group, \(HR\) is the target hazard
+ratio comparing treatment with control, \(z_{1-\alpha/2}\) is the
+standard normal critical value for a two-sided test, and \(\Phi(\cdot)\)
+is the standard normal cumulative distribution function.
+
+For equal allocation, where \(p = 0.50\), this simplifies to
+
+\[
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{2}|\log(HR)|
+-
+z_{1-\alpha/2}
+\right).
+\] This expression estimates the probability of rejecting the null
+hypothesis of no treatment effect,
+
+\[
+H_0: HR = 1,
+\]
+
+when the true treatment effect is assumed to be \(HR \neq 1\). This is
+the inverse form of the standard event-count formula for survival
+analysis and is appropriate for assessing whether the available number
+of primary endpoint events provides adequate power for detecting a
+specified hazard ratio..
+
+\subsection{Power for Subgroup Differences:
+Gender}\label{power-for-subgroup-differences-gender}
+
+For subgroup interaction analyses, power can be estimated directly from
+the anticipated number of observed events. Because interaction effects
+are estimated from contrasts between subgroup-specific treatment
+effects, the effective amount of information is reduced relative to the
+overall treatment comparison. Consequently, substantially larger event
+counts are typically required to detect treatment effect heterogeneity
+across subgroups (\citeproc{ref-Hsieh2000}{Hsieh and Lavori 2000}).
+
+For a two-sided interaction test at significance level \(\alpha\), the
+approximate power is
+
+\[
+\text{Power}
+=
+\Phi\left(
+\sqrt{
+D \,
+p_T(1-p_T)\,
+p_G(1-p_G)
+}
+\,
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right),
+\]
+
+where \(D\) is the total number of observed or anticipated events,
+\(p_T\) is the proportion assigned to the treatment group, \(p_G\) is
+the proportion of participants in one of the subgroup categories (for
+example, one gender subgroup), \(HR_{\text{int}}\) is the interaction
+hazard ratio, \(z_{1-\alpha/2}\) is the standard normal critical value
+for a two-sided test, and \(\Phi(\cdot)\) is the standard normal
+cumulative distribution function (\citeproc{ref-Hsieh2000}{Hsieh and
+Lavori 2000})..
+
+The interaction hazard ratio quantifies the relative difference between
+subgroup-specific treatment effects. For example, if
+
+\[
+HR_1
+\]
+
+denotes the treatment hazard ratio in subgroup 1 and
+
+\[
+HR_0
+\]
+
+denotes the treatment hazard ratio in subgroup 0, then the interaction
+hazard ratio is
+
+\[
+HR_{\text{int}}
+=
+\frac{HR_1}{HR_0}.
+\]
+
+Equivalently,
+
+\[
+\log(HR_{\text{int}})
+=
+\log(HR_1)
+-
+\log(HR_0).
+\]
+
+For equal treatment allocation and equally sized subgroups, where
+
+\[
+p_T = 0.50
+\quad \text{and} \quad
+p_G = 0.50,
+\]
+
+the power approximation simplifies to
+
+\[
+\text{Power}
+=
+\Phi\left(
+\frac{\sqrt{D}}{4}
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right).
+\]
+
+This formulation estimates the probability of rejecting the null
+hypothesis of no treatment-by-subgroup interaction,
+
+\[
+H_0: HR_{\text{int}} = 1,
+\]
+
+when the true interaction effect satisfies
+
+\[
+HR_{\text{int}} \neq 1.
+\]
+
+\subsection{Subgroup Power Analysis:
+Ethnicity}\label{subgroup-power-analysis-ethnicity}
+
+For ethnic subgroup interaction analyses, power can be estimated
+directly from the anticipated number of observed events. Similar to
+gender subgroup analyses, interaction effects are estimated from
+contrasts between subgroup-specific treatment effects, reducing the
+effective amount of information available relative to the overall
+treatment comparison. Because multiple ethnic subgroup contrasts are
+evaluated simultaneously, substantially larger event counts are
+generally required to detect meaningful treatment effect heterogeneity
+across ethnic groups (\citeproc{ref-Hsieh2000}{Hsieh and Lavori 2000}).
+
+For a two-sided interaction test at significance level \(\alpha\), the
+approximate power is
+
+\[
+\text{Power}
+=
+\Phi\left(
+\sqrt{
+D \,
+p_T(1-p_T)\,
+p_E(1-p_E)
+}
+\,
+|\log(HR_{\text{int}})|
+-
+z_{1-\alpha/2}
+\right),
+\] \(p_T\) is the proportion assigned to the treatment group, \(p_E\) is
+the proportion of participants in one of the ethnic subgroup categories,
+\(HR_{\text{int}}\) is the interaction hazard ratio comparing
+subgroup-specific treatment effects, \(z_{1-\alpha/2}\) is the standard
+normal critical value for a two-sided test, and \(\Phi(\cdot)\) is the
+standard normal cumulative distribution function
+(\citeproc{ref-Hsieh2000}{Hsieh and Lavori 2000}).
+
+\subsection{Power Analysis Simulation}\label{power-analysis-simulation}
+
+Since there was no power analysis associated with this study, a baseline
+power analysis on overall treatment effect will be performed as point of
+reference for power analysis by gender and ethnic subgroups.
+
+To gain a better understanding of number of patients needed to be
+recruited by subgroup to achieve desired levels of power a simulation
+will be run to estimate number of events, and indirectly the number of
+patients that would need to be recruited by subgroup to achieve the
+desired power.
+
+Since there are multiple hypotheses being tested on the same data set, a
+Bonferroni adjustment will be applied to the significance level of each
+test to achieve a family wise error rate of \(\alpha\) = 0.05. Since we
+are testing three distinct hypotheses, this will be accomplished by
+applying a Bonferroni adjustment to the significance used in each
+individual test statistic so that \$\alpha\_adj = 0.05 / 3 = 0.017.
+
+\section{Results}\label{results}
+
+The analysis in this paper was completed using the R statistical package
+(\citeproc{ref-R-base}{R Core Team 2026}) primarily using the survival
+library (\citeproc{ref-survival-package}{Therneau 2026}).
+
+\section{Conclusion}\label{conclusion}
+
+Brilliant and compelling conclusion
+
+\phantomsection\label{refs}
+\begin{CSLReferences}{1}{0}
+\bibitem[\citeproctext]{ref-eshera2015demographics}
+Eshera, N., H. Itana, L. Zhang, G. Soon, and E. Fadiran. 2015.
+{``Demographics of Clinical Trial Participants in Pivotal Trials for New
+Molecular Entity Drugs.''} \emph{The American Journal of Therapeutics}
+22 (6): 435--55.
+
+\bibitem[\citeproctext]{ref-hammer1997controlled}
+Hammer, Scott M., Kathleen E. Squires, Michael D. Hughes, Janet M.
+Grimes, Lisa M. Demeter, Judith S. Currier, Joseph J. Jr. Eron, et al.
+1997. {``A Controlled Trial of Two Nucleoside Analogues Plus Indinavir
+in Persons with Human Immunodeficiency Virus Infection and CD4 Cell
+Counts of 200 Per Cubic Millimeter or Less.''} \emph{New England Journal
+of Medicine} 337 (11): 725--33.
+\url{https://doi.org/10.1056/NEJM199709113371101}.
+
+\bibitem[\citeproctext]{ref-Hsieh2000}
+Hsieh, Felix Y., and Philip W. Lavori. 2000. {``Sample-Size Calculations
+for the Cox Proportional Hazards Regression Model with Nonbinary
+Covariates.''} \emph{Controlled Clinical Trials} 21 (6): 552--60.
+\url{https://doi.org/10.1016/S0197-2456(00)00104-5}.
+
+\bibitem[\citeproctext]{ref-khan2020women}
+Khan, Muhammad Shahzeb, Izza Shahid, Tariq Jamal Siddiqi, Safi U. Khan,
+Haider J. Warraich, Stephen J. Greene, Javed Butler, and Erin D. Michos.
+2020. {``Ten-Year Trends in Enrollment of Women and Minorities in
+Pivotal Trials Supporting Recent US FDA Approval of Novel
+Cardiometabolic Drugs.''} \emph{Journal of the American Heart
+Association} 9 (10): e015594.
+\url{https://doi.org/10.1161/JAHA.119.015594}.
+
+\bibitem[\citeproctext]{ref-moore2016_ch2}
+Moore, Dirk F. 2016. {``Basic Concepts and Survival Distributions.''} In
+\emph{Applied Survival Analysis Using r}. Springer.
+\url{https://doi.org/10.1007/978-3-319-31245-3_2}.
+
+\bibitem[\citeproctext]{ref-poon2013participation}
+Poon, Raymond, Khushbu Khanijow, Sabrina Umarjee, Ekaterina Fadiran, M.
+Yu, Lei Zhang, and Amish Parekh. 2013. {``Participation of Women and Sex
+Analyses in Late-Phase Clinical Trials of New Molecular Entity Drugs and
+Biologics.''} \emph{Journal of Women's Health} 22 (7): 604--16.
+
+\bibitem[\citeproctext]{ref-R-base}
+R Core Team. 2026. \emph{R: A Language and Environment for Statistical
+Computing}. Vienna, Austria: R Foundation for Statistical Computing.
+\url{https://www.R-project.org/}.
+
+\bibitem[\citeproctext]{ref-Schoenfeld1983}
+Schoenfeld, David A. 1983. {``Sample-Size Formula for the
+Proportional-Hazards Regression Model.''} \emph{Biometrics} 39 (2):
+499--503. \url{https://doi.org/10.2307/2531021}.
+
+\bibitem[\citeproctext]{ref-GLDreg}
+Su, Shengli et al. 2023. \emph{GLDreg: Generalized Lambda Distribution
+Regression}. \url{https://CRAN.R-project.org/package=GLDreg}.
+
+\bibitem[\citeproctext]{ref-survival-package}
+Therneau, Terry M. 2026. \emph{A Package for Survival Analysis in r}.
+\url{https://CRAN.R-project.org/package=survival}.
+
+\end{CSLReferences}
+
+
+
+
+\end{document}

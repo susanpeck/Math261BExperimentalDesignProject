@@ -1,0 +1,34 @@
+The underrepresentation of women and racial and ethnic minorities in clinical 
+trials has been documented across decades of pharmaceutical research, and three 
+studies are particularly relevant to the questions examined here.
+
+@Poon2013 examined the participation of women and the reporting of sex-stratified 
+analyses in 156 late-phase pivotal trials supporting FDA approval from 2000 to 
+2009. Women constituted on average 45% of enrolled participants, with the greatest 
+imbalances in cardiovascular and infectious disease trials. Crucially, even when 
+women were enrolled in adequate numbers, sex-specific analyses were rarely 
+reported --- fewer than one-third of trials provided subgroup results stratified 
+by sex. This finding maps directly onto the ACTG 320 sex subgroup problem: female 
+participants dominated enrollment (82.6%) while the male stratum contributed only 
+15 events, leaving the sex-specific comparison severely underpowered regardless of 
+total enrollment.
+
+@Khan2020 extended the question to racial and ethnic minorities, analyzing pivotal 
+cardiometabolic drug trials submitted to the FDA between 2008 and 2017. Minority 
+enrollment improved only modestly over the decade and remained well below the 
+representation of those groups among patients with the diseases under study. The 
+authors noted the same structural problem visible in ACTG 320: even when minority 
+participants were enrolled, absolute numbers were too small to support meaningful 
+subgroup analyses. They conclude by calling for prospective enrollment targets for 
+underrepresented groups as a design requirement rather than a post-hoc 
+consideration.
+
+@Eshera2015 documented the same pattern across all therapeutic areas in pivotal 
+trials from 2005 to 2012, finding persistent underrepresentation of older adults, 
+women, and racial minorities relative to disease burden in the general population. 
+Taken together, these three studies establish that the limitations visible in ACTG 
+320 are not unique to HIV research but reflect a structural feature of how pivotal 
+trials are designed. The absence of significant subgroup findings in these trials 
+typically reflects insufficient power rather than an absence of heterogeneous 
+treatment effects --- a distinction that this paper quantifies explicitly using 
+the ACTG 320 data.
