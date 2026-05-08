@@ -42,11 +42,10 @@ A total of 96 participants experienced the primary endpoint during
 follow-up, yielding an overall event rate of approximately 8.3%. The
 remaining 1,055 participants were censored, most at study close-out. The
 low overall event rate reflects the relatively short follow-up period of
-the trial and means that statistical power for subgroup analyses is
+the trial. Moreover, statistical power for subgroup analyses is
 driven primarily by the small absolute number of events within each
 subgroup rather than by enrollment counts. The original article
-[@Hammer1997] does not report a power analysis for subgroup comparisons;
-power calculations were performed only for the overall treatment effect.
+[@Hammer1997] does not report a power analysis for subgroup comparisons; it only calculates power for the overall treatment effect.
 
 Clinical trials evaluating time-to-event outcomes require statistical
 methods that properly account for censoring and the timing of events. In
@@ -54,7 +53,7 @@ the context of the ACTG 320 study, the primary endpoint is the time to
 progression to AIDS or death, making survival analysis the appropriate
 framework. The section will start with a review of key concepts in
 survival analysis and progress to regression model formulations,
-hypothesis testing and power analysis definitions.
+hypothesis testing, and power analysis definitions.
 
 ## Survival and Hazard Functions
 
@@ -88,9 +87,8 @@ $$
 
 ## Cox Proportional Hazards Model and Hazard Ratios
 
-The Cox proportional hazards model is used in time-to-event clinical
-studies to estimate the association between covariates and the event
-outcomes. The model is semi-parametric since it doesn't require
+The Cox proportional hazards model estimate the association between covariates and the event outcomes in time-to-event clinical
+studies. The model is semi-parametric since it doesn't require
 specifying the baseline hazard function. For subject $i$ with covariate
 vector ${X}_i$, the Cox model is
 

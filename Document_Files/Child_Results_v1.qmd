@@ -69,13 +69,14 @@ n_events <- sum(df$censor)
 ```
 
 
-The analysis is organized into four sections: whole group, sex subgroup, race/ethnicity subgroup and power analysis. Analysis and exhibits in this paper was generated using the R statistical package [@R-base] primarily using the survival library [@survival-package].
+The analysis is organized into four sections: whole group, sex subgroup, race/ethnicity subgroup, and power analysis. We use R [@R-base] and the package "survival" [@survival-package] to perform the analysis and generate exhibits in this paper
 
 ## Whole Group
-The Kaplan-Meier curves for the control and treatment groups are shown and visually suggest a noticeable reduction in the hazard. 
+The Kaplan-Meier curves for the control and treatment groups are shown in Figure 1 and visually suggest a noticeable reduction in the hazard. 
 
-```{r km-plot, fig.width=7, fig.height=4.5, fig.cap="Kaplan-Meier survival curves for Indinavir versus No Indinavir treatment groups."}
-
+```{r fig-km-plot, fig.width=7, fig.height=4.5, fig.cap="Kaplan-Meier survival curves for Indinavir versus No Indinavir treatment groups."}
+#| fig-pos: "!ht"
+#| out-width: "80%"
 ## Kaplan-Meier Survival Curves
 
 km_fit <- survfit(Surv(time, censor) ~ idv_label, data = df)
@@ -101,10 +102,9 @@ legend(
 )
 ```
 
-The baseline Cox model includes the following covariates: treatment indicator (tx), baseline CD4 count (cd4), age, Karonfsky performance scale (karnof), months of prior ZDV use (priorzdv) and CD40 cell count stratification (strat2). The regression results are shown in the following table. 
+The baseline Cox model includes the following covariates: treatment indicator (tx), baseline CD4 count (cd4), age, Karnofsky performance scale (karnof), months of prior ZDV use (priorzdv), and CD40 cell count stratification (strat2). The regression results are in Table 1
 
-An HR = 0.517 for the treatmen indicator means that at any given point in time, patients receiving indinavir had about half the hazard of experiencing an AIDS-defining event or death compared to patients not receiving indinavir after controlling for the other covariates, which is consistent with what Hammer et al. (1997) reported and confirms your model is reproducing the original study findings.
-
+An HR = 0.517 for the treatment indicator means that at any given point in time, patients receiving indinavir had about half the hazard of experiencing an AIDS-defining event or death compared to patients not receiving indinavir after controlling for the other covariates, which is consistent with what Hammer et al. (1997) reported and confirms your model is reproducing the original study findings.
 
 ```{r whole-group-model}
 model_baseline <- coxph(
@@ -176,15 +176,15 @@ lr_df <- data.frame(
 )
 ```
 
-A log-rank test was used to test overall model significance and based on the chi-square statistic of 10.545 with 1 degree of freedom yields p = 0.0012, which is highly statistically significant indicating that patients receiving indinavir had meaningfully different event timing than those who did not. 
+We used a log-rank test to test overall model significance. Based on the chi-square statistic of 10.545 with 1 degree of freedom, we obtained a p-value of p = 0.0012. This is statistically significant, indicating that patients receiving indinavir had meaningfully different event timing than those who did not. 
 
 
 ## Gender Subgroup
-To test if there is a difference in the treatment effect for men vs. women in the group, two models are fit. The baseline model adds participant `sex` as a fixed covariate alongside treatment. The full model adds a `tx * sex` interaction term to test whether sex *modifies* the treatment effect. A likelihood ratio test compares the two models and then two Cox models are fit within each sex stratum (female-only, male-only) to calculate stratum-specific HRs.
+We fit two models to test the difference in treatment effects between men and women. The first is the baseline model, which adds `sex` as a fixed covariate alongside treatment. The second is the full model, which adds a `tx * sex` interaction term to test whether sex modifies the treatment effect. A likelihood ratio test compares the two models. Then, we fit two Cox models within each sex stratum (female-only, male-only) to calculate stratum-specific HRs.
 
 ### Gender Baseline Model
 
-Sex is included as a covariate with no interaction, estimating the marginal treatment effect after adjusting for sex. Results shown below show the HR remains unchanged at 0.517. The HR for sex has a highly insignificant p-value indicating that sex has no meaningful impact on the hazard ratio. 
+Sex is included as a covariate with no interaction, estimating the marginal treatment effect after adjusting for sex. The results in Table 2 show the HR remains unchanged at 0.517. The HR for sex has an insignificant p-value, indicating that sex has no meaningful impact on the hazard ratio. 
 
 ```{r sex-baseline-model}
 model_sex_baseline <- coxph(
@@ -220,7 +220,7 @@ qtable(
 
 
 ### Sex Full Model (Interaction)
-In the full model, the HR for treatment among females (the reference group for sex) is 0.460. This means females receiving indinavir have about 54% lower hazard than females not receiving it which is a statistically significant difference. The interaction HR of 2.034 means the treatment effect in males which means protective effect of indinavir appears *weaker* in males than females. However the 95% CI is very wide and crosses 1.0, and p = 0.2141, so this difference is **not statistically significant**. You cannot conclude from this data that sex genuinely modifies the treatment effect.
+In the full model, the HR for treatment among females (the reference group for sex) is 0.460. This means females receiving indinavir have about 54% lower hazard than females not receiving it, a statistically significant difference. The interaction HR is 2.034, indicating the treatment effect in male participants appears weaker than that in female participants. However, the 95% CI is very wide and crosses 1.0, and p = 0.2141, so this difference is not statistically significant. We cannot conclude from this data that sex genuinely modifies the treatment effect.
 
 ```{r sex-full-model}
 model_sex_full <- coxph(
@@ -265,7 +265,7 @@ lr_s_df <- data.frame(
 )
 ```
 
-The likelihood ratio test confirms this with a p-value = 0.2187. Adding the interaction term does not significantly improve model fit over the baseline model so we fail to reject the null hypothesis that the treatment effect is meaningfully different between female and male patients. The effect sizes by set are estimated and shown below. 
+The likelihood ratio test confirms this with a p-value = 0.2187. Adding the interaction term does not significantly improve model fit over the baseline model. We fail to reject the null hypothesis that the treatment effect is meaningfully different between female and male patients. The effect sizes by set are estimated and shown below. 
 
 
 ```{r sex-strata, results='asis'}
@@ -291,16 +291,16 @@ sex_strata_df <- do.call(rbind, sex_strata)
 
 ```
 
-With only 15 events in the male stratum, the Cox model has very little information to work with. A general rule of thumb in survival analysis is that you need at least 10–15 events per predictor variable in the model. Your male stratum has 15 events total across 6 predictors — the model is severely underpowered and the estimates are unreliable. For comparison, the Kaplan-Meier survival curves are shown below.
+With only 15 events in the male stratum, the Cox model has very little information to work with. The model is severely underpowered, and the estimates are unreliable.
 
 
 ## Race/Ethnicity Subgroup
 
-Following the same procedure as with sex subgroups, a baseline with no interactions and full model with interactions are developed and tested. In this case, race/ethnicity is included as a 5-level factor with White as the reference group. 
+Following the same procedure as with sex subgroups, we fit and compare a baseline model with no interactions and a full model with interactions. In this case, we include race/ethnicity as a 5-level factor with White as the reference group. 
 
 
 ### Baseline Race/Ethnicity Model
-The treament HR = 0.526 means that after adjusting for race/ethnicity as a 5-level factor, patients receiving indinavir had approximately 47% lower hazard of AIDS-defining events or death compared to patients not receiving indinavir. This result suggests that race/ethnicity is a not meaningful confounder of the treatment-outcome relationship like the particpant's gender. 
+The treatment HR = 0.526 means that after adjusting for race/ethnicity as a 5-level factor, patients receiving indinavir had approximately 47% lower hazard of AIDS-defining events or death compared to patients not receiving indinavir. This result suggests that race/ethnicity is not a meaningful confounder of the treatment-outcome relationship, like the participant's gender.
 
 
 ```{r race-baseline-model}
@@ -335,13 +335,15 @@ coef_rb <- data.frame(
 
 ### Race Full Model
 
-The treatment HR for White patients (the reference group) is 0.534, confirming a significant protective effect in White patients specifically.
+### Race Full Model
 
-Among all of the race interaction terms, Black, Hispanic and Other are all insignificant, suggesting no meaningful difference in treatment effect by race. At first glance, Asian/PI appears to be the exception appearing to be highly significant but looking at the bounds of the 95% CI suggests highly unstable estimates due extremely small sample size. 
+The treatment HR for White patients (the reference group) is 0.534, confirming a significant protective effect.
 
-This is confirmed with the results of the likelihood ratio test with Chi-square = 8.326, df = 4, p = 0.080. The interaction as a whole is **not statistically significant** at the conventional $\\alpha$ = 0.05 threshold, though it approaches significance at $\\alpha$ = 0.10. Formally, it cannot be concluded that race/ethnicity modifies the treatment effect. The borderline p-value is largely being driven by the unstable Asian/PI interaction term. Excluding these observations from the data would reduce the significance level.
+The interaction terms for Black, Hispanic, and Other are all insignificant, suggesting no meaningful difference in treatment effect by race. The interaction for Asian/PI appears significant, with a p-value = 00.033. However, the bounds of the 95% CI suggest highly unstable estimates due to an extremely small sample size. 
 
-The race/ethnicity subgroup analysis is limited by severe sample size constraints in the non-White groups, particularly Asian/PI and Other. The formally correct conclusion is that race/ethnicity does not significantly modify the treatment effect at $\\alpha$ = 0.05.
+We confirm these results with the likelihood ratio test with Chi-square = 8.326, df = 4, p = 0.080. Using the conventional significance of $\alpha$ = 0.05, we conclude the interaction as a whole is not statistically significant. We cannot conclude that race/ethnicity modifies the treatment effect. The unstable Asian/PI interaction term is likely the reason for the smaller p-value. Excluding these observations from the data would likely increase the p-value.
+
+The race/ethnicity subgroup analysis is limited by severe sample size constraints in the non-White groups, particularly Asian/PI and Other. The formally correct conclusion is that race/ethnicity does not significantly modify the treatment effect at $\alpha$ = 0.05.
 
 
 ```{r race-full-model}
@@ -396,7 +398,7 @@ lr_r_df <- data.frame(
 ```
 
  
-Below are the estimated race specific effect sizes.
+Table 4 contains the estimated race specific effect sizes.
 
 ```{r race-strata, results='asis'}
 race_groups <- list(
@@ -429,9 +431,9 @@ race_strata_df <- do.call(rbind, race_strata)
 
 
 ## Summary of All Effect Sizes
-The following table summarizes all effect sizes as measured by HR. As can be seen they are stable for overall group, sex and race but become unrealiable at the subgroup level due to the small number of events and in the case of Asian/PI and Other the estimates are completely unreliable.
+Table 5 summarizes all effect sizes as measured by HR. They are stable for the overall group, sex, and race, but become unreliable at the subgroup level due to the small number of events. For Asian/PI and Other, the estimates are completely unreliable.
 
-HR \< 1 indicates indinavir-containing regimens reduce the hazard of AIDS-defining events or death relative to nucleoside-only therapy. Interaction p-values from the LR tests indicate whether subgroup membership significantly modifies the treatment effect. Note that the Asian/PI and Other race subgroups have small sample sizes; confidence intervals for these groups should be interpreted with caution.
+HR \< 1 indicates indinavir-containing regimens reduce the hazard of AIDS-defining events or death relative to nucleoside-only therapy. Interaction p-values from the LR tests indicate whether subgroup membership significantly modifies the treatment effect. Note that the Asian/PI and Other race subgroups have small sample sizes, resulting in meaningless confidence intervals.
 
 ```{r summary-table, results='asis'}
 summary_rows <- list(
@@ -501,10 +503,10 @@ qtable(
 
 ## Initial Observed Power for ACTG 320 Subgroup Analyses
 
-Before estimating the sample sizes needed for future studies, the observed or **effective power** of the ACTG 320 analyses was calculated for the overall study population and for each sex and race/ethnicity subgroup. 
+Before estimating the sample sizes needed for future studies, we calculated the observed or effective power of the ACTG 320 analyses for the overall study population and for each sex and race/ethnicity subgroup. 
 
 
-Power was estimated assuming $p = 0.50$ is the assumed treatment allocation proportion $\alpha = 0.025$ was used to account for the Bonferroni-adjusted two-sided significance level. These calculations should be interpreted descriptively because observed post hoc power is a function of the estimated effect size and event count.
+Power was estimated assuming the treatment and control groups have equal sample sizes. We used $\alpha = 0.025$ to account for the Bonferroni-adjusted two-sided significance level. These calculations should be interpreted descriptively because observed post hoc power is a function of the estimated effect size and event count.
 
 ```{r initial-observed-power, results='asis'}
 # Observed effective power based on observed HRs and event counts
@@ -602,13 +604,12 @@ qtable(
 )
 ```
 
-The initial power estimates show that the overall study and some larger subgroups had adequate power to detect the observed treatment effect, while smaller subgroups were limited by sparse event counts. In particular, estimates for male, Asian/Pacific Islander, and Other race groups should be interpreted cautiously because their hazard ratios were estimated from very few events, making the calculated power unstable and primarily descriptive.
-
+The initial power estimates indicate that the overall study and some larger subgroups had adequate power to detect the observed treatment effect. However, sparse event counts limited estimates for smaller subgroups. In particular, hazard ratios were estimated from very few events for male, Asian/Pacific Islander, and Other races, making the calculated power unstable and primarily descriptive.
 
 ## Power Analysis: Required Sample Sizes for a Future Study
-The subgroup analyses in revealed substantial imbalance in sample sizes across sex and race/ethnicity groups, leaving several subgroups severely underpowered. This section uses the observed effect sizes (HRs) from the stratum-specific models as assumed true effects in a prospective power analysis, estimating the sample sizes a future study would need to reliably detect those effects.
+The subgroup analyses revealed substantial imbalance in sample sizes across sex and race/ethnicity groups, leaving several subgroups severely underpowered. This section uses the observed effect sizes (HRs) from the stratum-specific models as assumed true effects in a prospective power analysis. We estimate the sample sizes a future study would need to detect these effects.
 
-For subgroups with unstable HR estimates (Asian/PI, Other, Male) the analysis uses a **range of plausible HRs** rather than the unreliable observed estimate, to illustrate what sample sizes would be needed to detect effects of various magnitudes.
+For subgroups with unstable HR estimates (Asian/PI, Other, Male), the analysis uses a range of plausible HRs to illustrate the needed sample sizes to detect effects of various magnitudes.
 
 ```{r power-setup}
 # Schoenfeld (1981) formula for required events
@@ -682,7 +683,7 @@ qtable(
 
 ### Underpowered Subgroups — Plausible HR Range
 
-For the male, Asian/PI, and Other subgroups, the observed HRs were unreliable due to very small event counts. Instead, this table shows required sample sizes across a **range of plausible HRs** (0.50 to 0.90), using each subgroup's observed event rate. This illustrates what a future study would need to enroll to detect effects of various magnitudes in these groups.
+For the male, Asian/PI, and Other subgroups, the observed HRs were unreliable due to few event counts. Instead, Table 8 shows required sample sizes across a range of plausible HRs (0.50 to 0.90), using each subgroup's observed event rate. 
 ```{r power-underpowered, results='asis'}
 # Underpowered subgroups with observed event rates
 underpowered <- list(
@@ -723,7 +724,7 @@ qtable(
 
 ### Events Required vs. Sample Size
 
-This table separates the required **number of events** from the required **total sample size** for the reliable subgroups at 80% power, to illustrate how event rate affects study planning.
+Table 10 shows the required number of events from the required total sample size for the reliable subgroups at 80% power.
 
 ```{r power-events-table, results='asis'}
 

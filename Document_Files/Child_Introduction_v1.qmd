@@ -3,35 +3,11 @@ title: "Introduction"
 format: pdf
 editor: visual
 ---
-Clinical trials are used for evaluating treatment efficacy, but they are 
-typically designed and powered to detect treatment effects in the overall enrolled 
-population. This means that demographic subgroups such as women and  
- minorities are often enrolled in numbers too small to 
-support reliable inference about whether a treatment works equally well, or works at all, 
-for those groups. When a trial lacks the power to detect subgroup 
-differences, the absence of a significant finding cannot be interpreted as evidence 
-that the treatment effect is the same across all subgroups. Yet the treatment guidelines are often generalized to all demographic groups. .
 
-The ACTG 320 trial [@Hammer1997] is a HIV clinical trial that provides an 
-instructive case study for examining these limitations. ACTG 320 randomized 1,156 patients with advanced HIV disease to either a standard 
-two-drug nucleoside regimen or a three-drug regimen adding the protease inhibitor 
-indinavir. The trial was powered for an overall treatment comparison and successfully 
-demonstrated that indinavir containing therapy reduced the hazard of AIDS progression 
-or death by approximately 50%. However, 
-enrollment was highly imbalanced across demographic groups, with female participants 
-comprising over 80% of the sample and several subgroups represented 
-by only a handful of participants and even fewer observed events.
+Clinical trials are the gold standard for evaluating treatment eﬀicacy, but researchers often focus on treatment effects in the overall population when designing experiments. Accounting for the overall population creates a structural blind spot: demographic subgroups such as women, racial minorities, and ethnic minorities are often enrolled in numbers too small to support reliable inference about whether a treatment works equally well ??? or at all ??? for those groups. The absence of a significant finding is not evidence that the treatment effect is uniform when a trial lacks power to detect subgroup differences. Yet, many researchers and policymakers routinely make that interpretation and write guidelines accordingly.
 
-The paper is going to investigate if the demographic subgroups were adequately powered to 
-detect treatment effects, and was indinavir's benefit consistent across subgroups. In addition, what enrollment would be required in a future study to 
-achieve adequate power for all demographic subgroups? In studies like ACTG 320 survival analysis is driven by the number of observed events, 
-not enrollment counts alone. A subgroup can be proportionally represented in a trial 
-while still contributing too few events to support stable hazard ratio estimation or 
-meaningful hypothesis testing.
+The ACTG 320 trial [@Hammer1997] is a landmark HIV clinical trial that provides an instructive case study for examining these limitations. Conducted in the mid-1990s, ACTG320 randomized 1,156 patients with advanced HIV disease to either a standard two-drug nucleoside regimen or a three-drug regimen adding the protease inhibitor indinavir. The trial successfully demonstrated that indinavir-containing therapy reduced the hazard of AIDS progression or death by approximately 50%??? a finding that transformed HIV treatment. The trial was powered for an overall treatment comparison; however, enrollment was highly imbalanced across demographic groups. Female participants comprised over 80% of the sample, and only a handful of participants and even fewer events represented several races/ethnicities. Whether indinavir's benefit was consistent across these groups was, by design, largely unanswerable.
 
-This paper first replicates the original ACTG 320 survival analysis using Cox proportional 
-hazards models and Kaplan--Meier curves, then extends it through a systematic 
-investigation of sex and race/ethnicity subgroup treatment effects and prospective 
-power analyses. The key finding is that while the overall treatment effect and the 
-female subgroup were adequately powered, the male, Asian/Pacific Islander, Hispanic, 
-and Other race subgroups were not. The paper will describe relevant literature on demographic representation in clinical trials (@sec-lit-review). It will then outline the ACTG 320 study design (@sec-study-design) and present the statistical analysis plan and power analysis framework (@sec-methods). The reanalysis results are presented in (@sec-results), and findings, limitations, and implications for future trial design are discussed in (@sec-discussion).
+The central research question of this paper is: given the observed effect sizes and event rates in ACTG 320, which demographic subgroups were adequately powered to detect treatment effects, and what enrollment would be required in a future study to achieve adequate power for those that were not? This question matters because the number of observed events, not enrollment counts alone, affects statistical power in survival analysis. A subgroup can be numerically represented in a trial while still contributing too few events to support stable hazard ratio estimation or meaningful hypothesis testing. Quantifying this gap is the first step toward designing trials that can actually answer subgroup-level questions.
+
+This paper replicates the original ACTG 320 survival analysis using Cox proportional hazards models and Kaplan--Meier curves, then extends it through a systematic investigation of sex and race/ethnicity subgroup treatment effects and prospective power analyses. The key finding is that while the overall treatment effect and the female subgroup were adequately powered, the male, Asian/Pacific Islander, Hispanic, and Other race subgroups were not ???, and in some cases required dramatic increases in enrollment to achieve 80% power. The paper is organized as follows: Section 2 reviews the relevant literature on demographic representation in clinical trials; Section 3 describes the ACTG 320 study design; Section 4 presents the statistical analysis plan and power analysis framework; Section 5 presents the reanalysis results; and Section 6 discusses findings, limitations, and implications for future trial design.
