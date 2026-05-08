@@ -104,7 +104,7 @@ legend(
 
 The baseline Cox model includes the following covariates: treatment indicator (tx), baseline CD4 count (cd4), age, Karnofsky performance scale (karnof), months of prior ZDV use (priorzdv), and CD40 cell count stratification (strat2). The regression results are in Table 1
 
-An HR = 0.517 for the treatment indicator means that at any given point in time, patients receiving indinavir had about half the hazard of experiencing an AIDS-defining event or death compared to patients not receiving indinavir after controlling for the other covariates, which is consistent with what Hammer et al. (1997) reported and confirms your model is reproducing the original study findings.
+An HR = 0.517 for the treatment indicator means that at any given point in time, patients receiving indinavir had about half the hazard of experiencing an AIDS-defining event or death compared to patients not receiving indinavir after controlling for the other covariates, which is consistent with what Hammer et al. (1997) reported and confirms the original study findings.
 
 ```{r whole-group-model}
 model_baseline <- coxph(
