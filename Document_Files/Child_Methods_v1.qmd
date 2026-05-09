@@ -1,9 +1,4 @@
----
-editor: 
-  markdown: 
-    wrap: 72
----
-
+# Dataset {#sec-data}
 The dataset used in this analysis is the ACTG 320 dataset, obtained from
 the `GLDreg` R library [@GLDreg]. The data contain participant level
 records for 1,151 enrolled patients and were originally collected as
@@ -38,6 +33,7 @@ driven primarily by the small absolute number of events within each
 subgroup rather than by enrollment counts. The original article
 [@Hammer1997] only calculates power for the overall treatment effect.
 
+# Statistical Analysis Plan and Power Analysis {#sec-methods}
 Clinical trials evaluating time-to-event outcomes require statistical
 methods that properly account for censoring and the timing of events. In
 the context of the ACTG 320 study, the primary endpoint is the time to
