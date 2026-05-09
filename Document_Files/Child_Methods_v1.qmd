@@ -2,9 +2,7 @@
 The dataset used in this analysis is the ACTG 320 dataset, obtained from
 the `GLDreg` R library [@GLDreg]. The data contain participant level
 records for 1,151 enrolled patients and were originally collected as
-part of a randomized clinical trial described in @Hammer1997. The original trial enrolled 1,156 participants, and the
-five-record discrepancy between the published enrollment count and the
-available dataset is unexplained in the public data release.
+part of a randomized clinical trial described in @Hammer1997. The original trial enrolled 1,156 participants, and the five-record discrepancy between the published enrollment count and the available dataset is unexplained in the public data release.
 
 The observational unit is the individual trial participant. Each record
 contains one row per participant with the following variables relevant
@@ -30,8 +28,7 @@ to this analysis:
 A total of 96 participants experienced the primary endpoint during
 follow-up, yielding an overall event rate of approximately 8.3%. This means that the statistical power for subgroup analyses is
 driven primarily by the small absolute number of events within each
-subgroup rather than by enrollment counts. The original article
-[@Hammer1997] only calculates power for the overall treatment effect.
+subgroup rather than by enrollment counts. 
 
 # Statistical Analysis Plan and Power Analysis {#sec-methods}
 Clinical trials evaluating time-to-event outcomes require statistical
@@ -56,7 +53,7 @@ survival probability declines over time. Higher values of $h(t)$
 correspond to a greater risk of the event occurring immediately after
 time $t$, while lower values indicate slower event occurrence. 
 
-The **Cox proportional hazards model** estimate the association between covariates and the event outcomes in time-to-event clinical
+The **Cox proportional hazards model** estimates the association between covariates and the event outcomes in time-to-event clinical
 studies. The model is semi-parametric since it doesn't require
 specifying the baseline hazard function. For subject $i$ with covariate
 vector ${X}_i$, the Cox model is
@@ -71,7 +68,8 @@ instantaneous risk over time [@moore2016_ch2]. The hazard ratio (HR)
 compares the hazard function between two groups
 $$
 HR = \frac{h_T(t)}{h_C(t)}
-$$ where $h_T(t)$ is the hazard function for the treatment group and
+$$ where $h_T(t)$ 
+is the hazard function for the treatment group and
 $h_C(t)$ hazard function for the control group. An HR less than one
 indicates the treatment reduces the instantaneous risk and is more
 effective than the control group. The Cox model assumes a constant hazard ratio over all time intervals.
@@ -84,16 +82,12 @@ L(\beta) = \prod_{i:\delta_i=1}
 \frac{\exp\left(X_i^\top \beta\right)}
 {\sum_{j \in R(t_i)} \exp\left(X_j^\top \beta\right)}.
 $$
-In this paper, we used a likelihood ratio test is generally preferred in survival analysis
-to  evaluating potential changes in interaction effects
-[@moore2016_ch5].To test a hypothesis about a subset of parameters, two
-models are considered:
+The likelihood ratio test is generally preferred in survival analysis for evaluating potential changes in interaction effects [@moore2016_ch5]. To test a hypothesis about a subset of parameters, two models are considered:
 -   a **reduced model**, which imposes the null hypothesis constraints
 -   a **full model**, which includes all parameters of interest
 The test compares how well each model fits the data using a measure called the likelihood. If the full model fits the data much better than the reduced model, the test returns a small p-value, indicating the extra parameters are worth including.
 
-The **overall treatment effect** may be evaluated using a Cox proportional
-hazards model of the form
+The **overall treatment effect** may be evaluated using a Cox proportional hazards model of the form
 $$
 h_i(t) =
 h_0(t)\exp\left(
@@ -112,9 +106,7 @@ H_0 : \beta_1 = 0 \quad \text{vs.} \quad H_A : \beta_1 \neq 0 \\
 H_0 : HR_T = 1 \quad \text{vs.} \quad H_A : HR_T \neq 1
 \end{gathered}
 $$
-To evaluate whether the treatment effect **differs by sex**, the regression
-model is expanded to include a gender indicator and a
-treatment-by-gender interaction term:
+To evaluate whether the treatment effect **differs by sex**, the regression model is expanded to include a gender indicator and a treatment-by-gender interaction term where female was the reference group:
 $$
 h_i(t) =
 h_0(t)\exp\left(
@@ -172,8 +164,8 @@ The joint hypothesis test for whether treatment effects differ across
 ethnic groups is
 $$
 \begin{gathered}
-H_0 : \beta_6 = \beta_7 = \beta_8 = \beta_9 = 0 \
-H_A : \text{At least one interaction coefficient is not equal to zero}
+H_0 : \beta_6 = \beta_7 = \beta_8 = \beta_9 = 0 \quad vs.\quad\
+H_A : \text{At least one coefficient} \neq 0
 \end{gathered}
 $$
 If the null hypothesis is rejected, there is evidence that the treatment
@@ -181,8 +173,7 @@ effect differs for at least one ethnic subgroup relative to the White
 non-Hispanic reference group.
 
 For a two-group survival comparison, **power** can be estimated directly
-when the number of observed or anticipated events is known. For a two-sided test at significance level $\alpha$, the approximate
-power is
+when the number of observed or anticipated events is known. For a two-sided test at significance level $\alpha$, the approximate power is
 $$
 \text{Power}
 =
@@ -197,10 +188,9 @@ the proportion assigned to the treatment group, $1-p$ is the proportion
 assigned to the control group, $HR$ is the target hazard ratio comparing
 treatment with control [@Schoenfeld1981].
 
-Detecting differences in treatment effects between subgroups requires more data than detecting the overall treatment effect. This is because a subgroup interaction effect is estimated by comparing two separate estimates. Specifically, the treatment effect in one subgroup is compared to the treatment effect in another subgroup, which uses less information than the overall analysis. As a result, substantially larger event counts are typically needed to detect whether treatment effects differ across subgroups (@Schoenfeld1981)..
+Detecting differences in treatment effects between subgroups requires more data than detecting the overall treatment effect. This is because a subgroup interaction effect is estimated by comparing two separate estimates. Specifically, the treatment effect in one subgroup is compared to the treatment effect in another subgroup, which uses less information than the overall analysis. As a result, substantially larger event counts are typically needed to detect whether treatment effects differ across subgroups [@Schoenfeld1981].
 
-For a two-sided interaction test at significance level $\alpha$, the
-approximate power is
+For a two-sided interaction test at significance level $\alpha$, the approximate power is
 $$
 \text{Power}
 =

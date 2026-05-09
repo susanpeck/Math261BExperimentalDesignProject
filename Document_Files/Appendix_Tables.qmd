@@ -1,5 +1,3 @@
-# Supplemental Tables
-
 ## Supplemental Sex Model Tables
 
 ```{r}
@@ -28,7 +26,7 @@ coef_sb <- data.frame(
   check.names = FALSE
 )
 
-qtable(coef_sb, caption = NULL, align = "lrrrr")
+qtable(coef_sb, caption = NULL, align = "lcccc")
 ```
 
 ```{r}
@@ -56,7 +54,7 @@ coef_sf <- data.frame(
   check.names = FALSE
 )
 
-qtable(coef_sf, caption = NULL, align = "lrrrr")
+qtable(coef_sf, caption = NULL, align = "lcccc")
 ```
 
 ## Supplemental Race/Ethnicity Model Table
@@ -92,7 +90,7 @@ coef_rf <- data.frame(
   check.names = FALSE
 )
 
-qtable(coef_rf, caption = NULL, align = "lrrrr")
+qtable(coef_rf, caption = NULL, align = "lcccc")
 ```
 
 ## Supplemental Power Analysis Tables
@@ -125,7 +123,9 @@ power_rows <- lapply(subgroups, function(sg) {
 
 power_df <- do.call(rbind, power_rows)
 
-qtable(power_df, caption = NULL, align = "lrrrrrrrrr", row.names = FALSE)
+qtable(power_df, caption = NULL, align = "lccccccccc", row.names = FALSE)
+
+
 ```
 
 ```{r}
@@ -141,7 +141,7 @@ underpowered <- list(
   list(label = "Race: Other",    n = 11,  events = 1)
 )
 
-hr_range <- seq(0.5, 0.9, by = 0.1)
+hr_range <- seq(0.9, 1.1, by = 0.1)
 
 up_rows <- lapply(underpowered, function(sg) {
   event_rate <- sg$events / sg$n
@@ -159,7 +159,7 @@ up_rows <- lapply(underpowered, function(sg) {
 
 up_df <- do.call(rbind, up_rows)
 
-qtable(up_df, caption = NULL, align = "llrr", row.names = FALSE)
+qtable(up_df, caption = NULL, align = "lccc", row.names = FALSE)
 ```
 
 ```{r}
@@ -183,5 +183,5 @@ evt_rows <- lapply(subgroups, function(sg) {
 
 evt_df <- do.call(rbind, evt_rows)
 
-qtable(evt_df, caption = NULL, align = "lrrrr", row.names = FALSE)
+qtable(evt_df, caption = NULL, align = "lcccc", row.names = FALSE)
 ```

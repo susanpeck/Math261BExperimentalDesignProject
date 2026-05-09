@@ -8,7 +8,7 @@ author:
 thanks: "Project repository available at: https://github.com/susanpeck/Math261BExperimentalDesignProject"
 date: today
 date-format: long
-abstract: Clinical trials are often powered to detect overall treatment effects, but not treatment effect differences within demographic subgroups. This paper reanalyzes the ACTG 320 HIV clinical trial to evaluate whether sex and race/ethnicity subgroups had adequate statistical power to support subgroup-specific conclusions. Using Cox proportional hazards models, Kaplan–Meier curves, likelihood ratio tests, and Schoenfeld-based power calculations, we replicate the original overall treatment finding and then assess subgroup treatment effects. Indinavir-containing therapy reduced the hazard of AIDS progression or death by approximately 48% in the full sample, but most subgroup analyses were underpowered because statistical information in survival analysis depends primarily on observed events rather than enrollment counts. The female subgroup and overall sample exceeded 80% power, while the male, Hispanic, Asian/Pacific Islander, and Other subgroups had too few events to support reliable inference. These results show that demographic representation alone does not guarantee inferential capacity and that future trials should use event-driven subgroup targets when subgroup-specific inference is a design objective.
+abstract: Clinical trials are often powered to detect overall treatment effects, but not treatment effect differences within demographic subgroups. This paper reanalyzes the ACTG 320 HIV clinical trial to evaluate whether sex and race/ethnicity subgroups had adequate statistical power to support subgroup-specific conclusions. Using Cox proportional hazards models, Kaplan–Meier curves, likelihood ratio tests, and Schoenfeld-based power calculations, we replicate the original overall treatment finding and then assess subgroup treatment effects. Indinavir-containing therapy reduced the hazard of AIDS progression or death by approximately 48% in the full sample, but most subgroup analyses were underpowered because statistical information in survival analysis depends primarily on observed events rather than enrollment counts. The female subgroup and overall sample exceeded 80% power, while the male, Hispanic, Asian/Pacific Islander, and Other subgroups had too few events to support reliable inference. These results show that demographic representation alone does not guarantee inferential integrity and that future trials should use event-driven subgroup targets when subgroup-specific inference is a design objective.
 format: pdf
 bibliography: references.bib
 number-sections: true
@@ -55,8 +55,8 @@ knitr::opts_chunk$set(
 {{< include Child_Discussion_v1.qmd >}}
 
 \newpage
-\appendix
+# Appendix: Supplemental Tables
 
 {{< include Appendix_Tables.qmd >}}
-
+\newpage
 # References

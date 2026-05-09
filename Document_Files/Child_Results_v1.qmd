@@ -1,5 +1,5 @@
 This analysis is organized into four sections: whole group, sex subgroup,
-race/ethnicity subgroup, and power analysis. We use R [@R-base] and the
+race subgroup, and power analysis. We use R [@R-base] and the
 package `survival` [@survival-package] to perform the analysis and
 generate exhibits in this paper.
 
@@ -248,7 +248,7 @@ modifies the treatment effect.
 The sex-specific models yield a hazard ratio of `r hr_female` for
 female participants and `r hr_male` for male participants. With only
 `r events_male` events among male participants across `r n_male` enrolled
-individuals, the Cox model for males is severely underpowered
+individuals, the Cox model for males is severely underpowered, and the
 estimated treatment effect should be interpreted with caution.
 
 ## Race/Ethnicity Subgroup
@@ -418,7 +418,10 @@ summary_rows <- list(
 summary_df <- do.call(rbind, summary_rows)
 colnames(summary_df)[7:8] <- c("95% CI Lower", "95% CI Upper")
 
-qtable(summary_df, caption = NULL, align = "llllrrrr", row.names = FALSE)
+
+qtable(summary_df, caption = NULL, align = "llllcccc", row.names = FALSE)
+
+
 ```
 
 ## Power Analysis
@@ -538,7 +541,11 @@ initial_power_df$Interpretation <- ifelse(
   "Below 80%"
 )
 
-qtable(initial_power_df, caption = NULL, align = "llrrrrrl", row.names = FALSE)
+
+
+qtable(initial_power_df, caption = NULL, align = "llcccccl", row.names = FALSE)
+
+
 ```
 
 Detailed sample size calculations are provided in Appendix Tables A4--A6.
@@ -546,7 +553,7 @@ For subgroups with more stable hazard ratio estimates, required sample
 sizes were calculated at 80%, 85%, 90%, and 95% power. For male,
 Asian/PI, and Other subgroups, where the observed hazard ratios were
 unstable, required sample sizes were calculated across assumed hazard
-ratios from 0.50 to 0.90. The Hispanic subgroup stands out as the only
+ratios from 0.9 to 1.1. The Hispanic subgroup stands out as the only
 stable subgroup that was underpowered in ACTG 320, requiring
 approximately `r required_n(0.628, 0.025, 0.80, 20 / 203)` participants
 to achieve 80% power compared to the `r 203` enrolled.
@@ -604,6 +611,7 @@ legend(
 #| results: asis
 #| echo: false
 #| warning: false
+#| message: false
 
 rec_rows <- lapply(subgroups, function(sg) {
   event_rate <- sg$events / sg$n
@@ -621,5 +629,5 @@ rec_rows <- lapply(subgroups, function(sg) {
 
 rec_df <- do.call(rbind, rec_rows)
 
-qtable(rec_df, caption = NULL, align = "lrrrl", row.names = FALSE)
+qtable(rec_df, caption = NULL, align = "lcccl", row.names = FALSE)
 ```
