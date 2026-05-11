@@ -603,14 +603,15 @@ observed_power <- function(hr, events, alpha = 0.025, allocation = 0.50) {
   round(power, 3)
 }
 
-required_events <- function(hr, alpha, power) {
+required_events <- function(hr, alpha, power, allocation = 0.50) {
   z_alpha <- qnorm(1 - alpha / 2)
   z_beta  <- qnorm(power)
-  ceiling((z_alpha + z_beta)^2 / (log(hr))^2)
+  # Schoenfeld (1981): divide by p*(1-p) to match the observed_power() NCP
+  ceiling((z_alpha + z_beta)^2 / (log(hr)^2 * allocation * (1 - allocation)))
 }
 
-required_n <- function(hr, alpha, power, event_rate) {
-  ceiling(required_events(hr, alpha, power) / event_rate)
+required_n <- function(hr, alpha, power, event_rate, allocation = 0.50) {
+  ceiling(required_events(hr, alpha, power, allocation) / event_rate)
 }
 
 power_vals <- c(0.80, 0.85, 0.90, 0.95)
@@ -716,17 +717,17 @@ to achieve 80% power compared to the `r 203` enrolled.
 
 ```{r}
 #| label: fig-power-curves
-#| fig-cap: "Power curves showing achieved power as a function of sample size for each reliable subgroup, with the 80% power threshold shown."
+#| fig-cap: "Power curves showing achieved power as a function of sample size for each reliable subgroup, with the 80% power threshold shown. Power at each sample size is estimated using the Schoenfeld (1981) approximation: $1 - \\Phi\\!\\left(z_{\\alpha/2} - \\sqrt{d \\cdot p(1-p)} \\cdot |\\log \\text{HR}|\\right)$, where $d$ is the expected number of events at that sample size (scaled by each subgroup's observed event rate), $p = 0.50$ is the allocation fraction, and $z_{\\alpha/2}$ is the Bonferroni-adjusted critical value at $\\alpha = 0.025$. This is the same formula used to compute the observed power and required sample sizes reported in the accompanying table."
 #| echo: false
 #| warning: false
 
-n_seq  <- seq(50, 3000, by = 25)
+n_seq  <- seq(50, 2500, by = 25)
 cols   <- c("black", "steelblue", "tomato", "forestgreen", "purple")
 labels <- sapply(subgroups, function(sg) sg$label)
 
 plot(
   NULL,
-  xlim = c(50, 3000),
+  xlim = c(50, 2500),
   ylim = c(0, 1),
   xlab = "Total Sample Size (n)",
   ylab = "Statistical Power",
@@ -734,18 +735,15 @@ plot(
 )
 
 abline(h = 0.80, lty = 2, col = "gray40")
-text(2800, 0.82, "80% Power", cex = 0.75, col = "gray40")
+text(2350, 0.82, "80% Power", cex = 0.75, col = "gray40")
 
 for (i in seq_along(subgroups)) {
   sg <- subgroups[[i]]
   event_rate <- sg$events / sg$n
-  z_alpha <- qnorm(1 - alpha / 2)
 
   pwr <- sapply(n_seq, function(n) {
     d <- n * event_rate
-    se <- 1 / sqrt(d * 0.25)
-    ncp <- abs(log(sg$hr)) / se
-    pnorm(ncp - z_alpha) + pnorm(-ncp - z_alpha)
+    observed_power(sg$hr, d, alpha = alpha, allocation = allocation)
   })
 
   lines(n_seq, pwr, col = cols[i], lwd = 2)
@@ -763,7 +761,7 @@ legend(
 
 ```{r}
 #| label: tbl-power-adequacy
-#| tbl-cap: "Adequacy of ACTG 320 Sample Sizes for 80% Power"
+#| tbl-cap: "Adequacy of ACTG 320 Sample Sizes for 80% Power. Required sample sizes are derived from the Schoenfeld (1981) formula using each subgroup's observed hazard ratio and event rate, assuming equal allocation and a Bonferroni-adjusted significance level of $\\alpha = 0.025$."
 #| results: asis
 #| echo: false
 #| warning: false

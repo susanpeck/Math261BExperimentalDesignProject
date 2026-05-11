@@ -132,24 +132,35 @@ qtable(power_df, caption = NULL, align = "lccccccccc", row.names = FALSE)
 
 ```{r}
 #| label: tbl-app-power-underpowered
-#| tbl-cap: "Appendix Table A5. Required Sample Sizes for 80% Power Across Assumed Hazard Ratios"
+#| tbl-cap: "Appendix Table A5. Required Sample Sizes for 80% Power Across Assumed Hazard Ratios for Subgroups with Unstable Estimates. Because Male, Asian/PI, and Other subgroups had too few events to produce reliable hazard ratio estimates, required sample sizes are shown across a range of plausible assumed HRs (0.5--0.9) using each subgroup's observed event rate. Required sample sizes use the Schoenfeld (1981) approximation with Bonferroni-adjusted $\\alpha = 0.025$ and equal allocation."
 #| results: asis
 #| echo: false
 #| warning: false
 
-# Subgroups with sparse events where HR estimates are unstable.
-# Labels match v4 subgroups list exactly.
-underpowered <- subgroups[
-  sapply(subgroups, function(sg) sg$label %in% c(
-    "Sex: Male",
-    "Race: Asian/PI",
-    "Race: Other"
-  ))
-]
+# Male, Asian/PI, and Other are excluded from the main subgroups list due to
+# unstable HR estimates. Their n and event counts are pulled directly from the
+# sex and race strata data frames produced in the main analysis.
+unstable <- list(
+  list(
+    label      = "Sex: Male",
+    n          = sex_strata_df$n[sex_strata_df$Subgroup == "Male"],
+    events     = sex_strata_df$Events[sex_strata_df$Subgroup == "Male"]
+  ),
+  list(
+    label      = "Race: Asian/PI",
+    n          = race_strata_df$n[race_strata_df$Subgroup == "Asian/PI"],
+    events     = race_strata_df$Events[race_strata_df$Subgroup == "Asian/PI"]
+  ),
+  list(
+    label      = "Race: Other",
+    n          = race_strata_df$n[race_strata_df$Subgroup == "Other"],
+    events     = race_strata_df$Events[race_strata_df$Subgroup == "Other"]
+  )
+)
 
 hr_range <- seq(0.5, 0.9, by = 0.1)
 
-up_rows <- lapply(underpowered, function(sg) {
+up_rows <- lapply(unstable, function(sg) {
   event_rate <- sg$events / sg$n
   data.frame(
     Subgroup                   = sg$label,
@@ -170,7 +181,7 @@ qtable(up_df, caption = NULL, align = "lccc", row.names = FALSE)
 
 ```{r}
 #| label: tbl-app-power-events
-#| tbl-cap: "Appendix Table A6. Required Events and Sample Sizes for 80% Power"
+#| tbl-cap: "Appendix Table A6. Required Events and Sample Sizes for 80% Power. Required events are derived from the Schoenfeld (1981) formula, $d = (z_{\\alpha/2} + z_{\\beta})^2 / (\\log(\\text{HR})^2 \\cdot p(1-p))$, with Bonferroni-adjusted $\\alpha = 0.025$, $p = 0.50$ equal allocation, and 80% power. Required sample size is obtained by dividing required events by each subgroup's observed event rate."
 #| results: asis
 #| echo: false
 #| warning: false
