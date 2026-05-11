@@ -102,6 +102,8 @@ qtable(coef_rf, caption = NULL, align = "lcccc")
 #| echo: false
 #| warning: false
 
+# subgroups list already contains the Whole Group entry as the first element,
+# so a single lapply over all entries produces the complete table.
 power_rows <- lapply(subgroups, function(sg) {
   event_rate <- sg$events / sg$n
   ns <- sapply(power_vals, function(pw) {
@@ -109,7 +111,7 @@ power_rows <- lapply(subgroups, function(sg) {
   })
   data.frame(
     Subgroup      = sg$label,
-    `Observed HR` = sg$hr,
+    `Observed HR` = round(sg$hr, 3),
     `Obs. n`      = sg$n,
     `Obs. Events` = sg$events,
     `Event Rate`  = round(event_rate, 3),
@@ -135,20 +137,24 @@ qtable(power_df, caption = NULL, align = "lccccccccc", row.names = FALSE)
 #| echo: false
 #| warning: false
 
-underpowered <- list(
-  list(label = "Sex: Male",      n = 200, events = 15),
-  list(label = "Race: Asian/PI", n = 14,  events = 3),
-  list(label = "Race: Other",    n = 11,  events = 1)
-)
+# Subgroups with sparse events where HR estimates are unstable.
+# Labels match v4 subgroups list exactly.
+underpowered <- subgroups[
+  sapply(subgroups, function(sg) sg$label %in% c(
+    "Sex: Male",
+    "Race: Asian/PI",
+    "Race: Other"
+  ))
+]
 
 hr_range <- seq(0.5, 0.9, by = 0.1)
 
 up_rows <- lapply(underpowered, function(sg) {
   event_rate <- sg$events / sg$n
   data.frame(
-    Subgroup = sg$label,
-    `Assumed HR` = hr_range,
-    `Observed Event Rate` = round(event_rate, 3),
+    Subgroup                   = sg$label,
+    `Assumed HR`               = hr_range,
+    `Observed Event Rate`      = round(event_rate, 3),
     `Required n for 80% Power` = sapply(
       hr_range,
       function(hr) required_n(hr, alpha, 0.80, event_rate)
@@ -169,14 +175,16 @@ qtable(up_df, caption = NULL, align = "lccc", row.names = FALSE)
 #| echo: false
 #| warning: false
 
+# subgroups list already contains the Whole Group entry as the first element,
+# so a single lapply produces the complete table including the whole-group row.
 evt_rows <- lapply(subgroups, function(sg) {
   event_rate <- sg$events / sg$n
   data.frame(
-    Subgroup = sg$label,
-    `Observed HR` = sg$hr,
-    `Event Rate` = round(event_rate, 3),
+    Subgroup                        = sg$label,
+    `Observed HR`                   = round(sg$hr, 3),
+    `Event Rate`                    = round(event_rate, 3),
     `Events Required for 80% Power` = required_events(sg$hr, alpha, 0.80),
-    `Required n for 80% Power` = required_n(sg$hr, alpha, 0.80, event_rate),
+    `Required n for 80% Power`      = required_n(sg$hr, alpha, 0.80, event_rate),
     check.names = FALSE
   )
 })

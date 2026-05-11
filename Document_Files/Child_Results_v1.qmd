@@ -111,6 +111,14 @@ full regression results are shown in @tbl-whole-group.
 #| echo: false
 #| warning: false
 
+model_unadjusted <- coxph(
+  Surv(time, censor) ~ tx,
+  data = df,
+  ties = "efron"
+)
+
+hr_whole_unadj <- exp(coef(model_unadjusted)["tx"])
+
 model_baseline <- coxph(
   Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
   data = df,
@@ -172,14 +180,16 @@ To examine whether the treatment effect differed between men and women,
 we fit two models. The first is a baseline model that includes sex as a
 fixed covariate alongside treatment. The second is a full model that adds
 a treatment-by-sex interaction term. A likelihood ratio test compares the
-two models. We then fit separate Cox models for females and males to
-estimate sex-specific hazard ratios.
+two models. We then derive sex-specific hazard ratios directly from the
+full interaction model coefficients using the delta method for standard
+errors.
 
 ```{r}
 #| label: sex-models
 #| echo: false
 #| warning: false
 
+# --- Baseline and full models ---
 model_sex_baseline <- coxph(
   Surv(time, censor) ~ tx + sex + age + cd4 + karnof + priorzdv + strat2,
   data = df,
@@ -204,33 +214,53 @@ s_sf <- summary(model_sex_full)
 
 hr_sex_interaction <- round(exp(coef(model_sex_full)["tx:sex"]), 3)
 
-sex_strata <- lapply(c(0, 1), function(g) {
-  lbl <- ifelse(g == 0, "Female", "Male")
-  sub <- df[df$sex == g, ]
-  m <- coxph(
-    Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
-    data = sub,
-    ties = "efron"
-  )
-  hr <- exp(coef(m)["tx"])
-  ci <- exp(confint(m)["tx", ])
-  data.frame(
-    Subgroup = lbl,
-    n = nrow(sub),
-    Events = sum(sub$censor),
-    HR = round(hr, 3),
-    `95% CI Lower` = round(ci[1], 3),
-    `95% CI Upper` = round(ci[2], 3),
-    check.names = FALSE
-  )
-})
+# --- Extract coefficients and variance-covariance matrix from full model ---
+# We need vcov() to correctly compute the SE for the male subgroup, whose
+# log(HR) = beta_tx + beta_(tx:sex) and whose variance requires the
+# covariance between those two terms (delta method).
+beta_sex <- coef(model_sex_full)
+V_sex    <- vcov(model_sex_full)
 
-sex_strata_df <- do.call(rbind, sex_strata)
+# --- Female (reference group, sex == 0) ---
+# HR depends only on beta_tx because sex == 0 zeroes out the interaction term.
+# log(HR_female) = beta_tx
+# Var(log HR_female) = Var(beta_tx)
+log_hr_female  <- beta_sex["tx"]
+var_female     <- V_sex["tx", "tx"]
+se_female      <- sqrt(var_female)
+hr_female_full <- exp(log_hr_female)
+ci_female_lo   <- exp(log_hr_female - qnorm(0.975) * se_female)
+ci_female_hi   <- exp(log_hr_female + qnorm(0.975) * se_female)
 
-hr_female    <- sex_strata_df$HR[sex_strata_df$Subgroup == "Female"]
-hr_male      <- sex_strata_df$HR[sex_strata_df$Subgroup == "Male"]
-n_male       <- sex_strata_df$n[sex_strata_df$Subgroup == "Male"]
-events_male  <- sex_strata_df$Events[sex_strata_df$Subgroup == "Male"]
+# --- Male (sex == 1) ---
+# log(HR_male) = beta_tx + beta_(tx:sex)
+# Var(log HR_male) = Var(beta_tx) + Var(beta_(tx:sex)) + 2*Cov(beta_tx, beta_(tx:sex))
+log_hr_male  <- beta_sex["tx"] + beta_sex["tx:sex"]
+var_male     <- V_sex["tx", "tx"] +
+                V_sex["tx:sex", "tx:sex"] +
+                2 * V_sex["tx", "tx:sex"]
+se_male      <- sqrt(var_male)
+hr_male_full <- exp(log_hr_male)
+ci_male_lo   <- exp(log_hr_male - qnorm(0.975) * se_male)
+ci_male_hi   <- exp(log_hr_male + qnorm(0.975) * se_male)
+
+# --- Combine into a data frame ---
+# n and Events are counted directly from df — no subgroup models are fit.
+sex_strata_df <- data.frame(
+  Subgroup       = c("Female", "Male"),
+  n              = c(sum(df$sex == 0), sum(df$sex == 1)),
+  Events         = c(sum(df$censor[df$sex == 0]), sum(df$censor[df$sex == 1])),
+  HR             = round(c(hr_female_full, hr_male_full), 3),
+  `95% CI Lower` = round(c(ci_female_lo, ci_male_lo), 3),
+  `95% CI Upper` = round(c(ci_female_hi, ci_male_hi), 3),
+  check.names    = FALSE
+)
+
+# --- Convenience scalars for use elsewhere in the document ---
+hr_female   <- sex_strata_df$HR[sex_strata_df$Subgroup == "Female"]
+hr_male     <- sex_strata_df$HR[sex_strata_df$Subgroup == "Male"]
+n_male      <- sex_strata_df$n[sex_strata_df$Subgroup == "Male"]
+events_male <- sex_strata_df$Events[sex_strata_df$Subgroup == "Male"]
 ```
 
 The sex baseline and full interaction models are reported in Appendix
@@ -245,21 +275,97 @@ ratio test yields a p-value of `r lr_s_p`, so adding the interaction term
 does not significantly improve model fit. We cannot conclude that sex
 modifies the treatment effect.
 
-The sex-specific models yield a hazard ratio of `r hr_female` for
-female participants and `r hr_male` for male participants. With only
-`r events_male` events among male participants across `r n_male` enrolled
-individuals, the Cox model for males is severely underpowered, and the
-estimated treatment effect should be interpreted with caution.
+The sex-specific hazard ratios are derived directly from the full
+interaction model rather than from separate subgroup regressions. The
+full interaction model takes the form
+
+$$
+h_i(t) = h_0(t) \exp\!\bigl(
+  \beta_1 T_i + \beta_2 G_i + \beta_3 T_i G_i
+  + \boldsymbol{\beta}_4^\top \mathbf{Z}_i
+\bigr),
+$$
+
+where $T_i$ is the treatment indicator, $G_i$ is a binary sex indicator
+(0 = female, 1 = male), and $\mathbf{Z}_i$ is the vector of baseline
+covariates. Because female is the reference group ($G_i = 0$), the
+interaction term drops out and the log hazard ratio for treatment among
+females is simply
+
+$$
+\log(\widehat{\mathrm{HR}}_{\text{female}})
+  = \hat{\beta}_1
+  = `r round(log_hr_female, 4)`.
+$$
+
+For male participants ($G_i = 1$), both the treatment coefficient and the
+interaction term contribute, giving
+
+$$
+\log(\widehat{\mathrm{HR}}_{\text{male}})
+  = \hat{\beta}_1 + \hat{\beta}_3
+  = `r round(beta_sex["tx"], 4)`
+    + `r round(beta_sex["tx:sex"], 4)`
+  = `r round(log_hr_male, 4)`.
+$$
+
+Exponentiating yields the subgroup hazard ratios:
+
+$$
+\widehat{\mathrm{HR}}_{\text{female}}
+  = e^{`r round(log_hr_female, 4)`}
+  = `r round(hr_female_full, 3)`,
+\qquad
+\widehat{\mathrm{HR}}_{\text{male}}
+  = e^{`r round(log_hr_male, 4)`}
+  = `r round(hr_male_full, 3)`.
+$$
+
+The 95% confidence intervals are constructed on the log scale and then
+exponentiated. For females the variance of $\hat{\beta}_1$ is taken
+directly from the model variance-covariance matrix,
+$\widehat{\mathrm{Var}}(\hat{\beta}_1) = `r round(var_female, 6)`$,
+giving $\widehat{\mathrm{SE}} = `r round(se_female, 4)`$. For males the
+variance of the sum $\hat{\beta}_1 + \hat{\beta}_3$ is obtained via the
+delta method,
+
+$$
+\widehat{\mathrm{Var}}\!\left(\hat{\beta}_1 + \hat{\beta}_3\right)
+  = \widehat{\mathrm{Var}}(\hat{\beta}_1)
+  + \widehat{\mathrm{Var}}(\hat{\beta}_3)
+  + 2\,\widehat{\mathrm{Cov}}(\hat{\beta}_1, \hat{\beta}_3)
+  = `r round(V_sex["tx","tx"], 6)`
+  + `r round(V_sex["tx:sex","tx:sex"], 6)`
+  + 2(`r round(V_sex["tx","tx:sex"], 6)`)
+  = `r round(var_male, 6)`,
+$$
+
+giving $\widehat{\mathrm{SE}} = `r round(se_male, 4)`$. The resulting
+95% confidence intervals are
+$[`r round(ci_female_lo, 3)`,\, `r round(ci_female_hi, 3)`]$ for females
+and
+$[`r round(ci_male_lo, 3)`,\, `r round(ci_male_hi, 3)`]$ for males.
+
+With only `r events_male` events among male participants across
+`r n_male` enrolled individuals, the estimated treatment effect for males
+should be interpreted with caution.
 
 ## Race/Ethnicity Subgroup
 
-To examine whether the treatment effect differed across race and ethnicity groups, we fit a baseline model that includes race/ethnicity as a fixed covariate and a full model that adds treatment-by-race/ethnicity interaction terms. Race/ethnicity is coded as a five-level factor with White non-Hispanic participants as the reference group. We then fit separate Cox models within each race/ethnicity group to estimate group-specific hazard ratios.
+To examine whether the treatment effect differed across race and ethnicity
+groups, we fit a baseline model that includes race/ethnicity as a fixed
+covariate and a full model that adds treatment-by-race/ethnicity
+interaction terms. Race/ethnicity is coded as a five-level factor with
+White non-Hispanic participants as the reference group. We then derive
+group-specific hazard ratios directly from the full interaction model
+coefficients using the delta method for standard errors.
 
 ```{r}
 #| label: race-models
 #| echo: false
 #| warning: false
 
+# --- Baseline and full models ---
 model_race_baseline <- coxph(
   Surv(time, censor) ~ tx + raceth_label + age + cd4 + karnof + priorzdv + strat2,
   data = df,
@@ -279,37 +385,82 @@ lr_race    <- anova(model_race_baseline, model_race_full)
 lr_r_chisq <- round(lr_race[2, "Chisq"], 3)
 lr_r_p     <- round(lr_race[2, "Pr(>|Chi|)"], 4)
 
+# Summary object needed for inline p-value reference in prose
 s_rf <- summary(model_race_full)
 
+# --- Extract coefficients and variance-covariance matrix from full model ---
+# We need the vcov matrix to correctly compute standard errors for combined
+# coefficients (e.g., tx + tx:raceth_labelBlack). The SE of a sum of
+# coefficients is not just the sum of their SEs — it requires the covariance
+# between them (delta method).
+beta <- coef(model_race_full)
+V    <- vcov(model_race_full)
+
+# --- Define subgroups, interaction term names, and raceth codes ---
+# Each entry maps a display label to the interaction coefficient name in the
+# model output and the raceth integer used to count n and Events from df.
+# White is the reference group so it has no interaction term.
 race_groups <- list(
-  list(var = "race_white",    label = "White"),
-  list(var = "race_black",    label = "Black"),
-  list(var = "race_hispanic", label = "Hispanic"),
-  list(var = "race_asian",    label = "Asian/PI"),
-  list(var = "race_other",    label = "Other")
+  list(label = "White",    interaction = NULL,                       raceth = 1),
+  list(label = "Black",    interaction = "tx:raceth_labelBlack",     raceth = 2),
+  list(label = "Hispanic", interaction = "tx:raceth_labelHispanic",  raceth = 3),
+  list(label = "Asian/PI", interaction = "tx:raceth_labelAsian/PI",  raceth = 4),
+  list(label = "Other",    interaction = "tx:raceth_labelOther",     raceth = 5)
 )
 
-race_strata <- lapply(race_groups, function(g) {
-  sub <- df[df[[g$var]] == 1, ]
-  m <- coxph(
-    Surv(time, censor) ~ tx + age + cd4 + karnof + priorzdv + strat2,
-    data = sub,
-    ties = "efron"
-  )
-  hr <- exp(coef(m)["tx"])
-  ci <- exp(confint(m)["tx", ])
+# --- Function to compute HR, 95% CI, n, and Events from full model ---
+# For the reference group (White): log(HR) = beta["tx"]
+# For all other groups:            log(HR) = beta["tx"] + beta["tx:raceth_labelX"]
+#
+# Variance for non-reference groups (delta method):
+#   Var(beta_tx + beta_int) = Var(beta_tx)
+#                           + Var(beta_int)
+#                           + 2 * Cov(beta_tx, beta_int)
+get_hr_from_full <- function(label, interaction, raceth, beta, V, df) {
+
+  if (is.null(interaction)) {
+    log_hr     <- beta["tx"]
+    var_log_hr <- V["tx", "tx"]
+  } else {
+    log_hr     <- beta["tx"] + beta[interaction]
+    var_log_hr <- V["tx", "tx"] +
+                  V[interaction, interaction] +
+                  2 * V["tx", interaction]
+  }
+
+  se_log_hr <- sqrt(var_log_hr)
+  hr        <- exp(log_hr)
+  ci_lo     <- exp(log_hr - qnorm(0.975) * se_log_hr)
+  ci_hi     <- exp(log_hr + qnorm(0.975) * se_log_hr)
+
+  # Count n and Events directly from df — no subgroup model is fit
+  sub_rows <- df$raceth == raceth
+
   data.frame(
-    Subgroup = g$label,
-    n = nrow(sub),
-    Events = sum(sub$censor),
-    HR = round(hr, 3),
-    `95% CI Lower` = round(ci[1], 3),
-    `95% CI Upper` = round(ci[2], 3),
-    check.names = FALSE
+    Subgroup       = label,
+    n              = sum(sub_rows),
+    Events         = sum(df$censor[sub_rows]),
+    HR             = round(hr, 3),
+    `95% CI Lower` = round(ci_lo, 3),
+    `95% CI Upper` = round(ci_hi, 3),
+    check.names    = FALSE
+  )
+}
+
+# --- Apply the function to each subgroup ---
+race_strata_list <- lapply(race_groups, function(g) {
+  get_hr_from_full(
+    label       = g$label,
+    interaction = g$interaction,
+    raceth      = g$raceth,
+    beta        = beta,
+    V           = V,
+    df          = df
   )
 })
 
-race_strata_df <- do.call(rbind, race_strata)
+# --- Combine into a single data frame ---
+race_strata_df <- do.call(rbind, race_strata_list)
 ```
 
 The baseline model yields a treatment hazard ratio of
@@ -317,7 +468,10 @@ The baseline model yields a treatment hazard ratio of
 race/ethnicity, patients receiving indinavir had approximately 47% lower
 hazard of AIDS-defining events or death. The full race/ethnicity
 interaction model is reported in Appendix Table A3. The interaction terms
-for Black, Hispanic, and Other are not statistically significant, providing no clear evidence that the treatment effect differs across these groups. The interaction term for the Asian/Pacific Islander group has a p-value of
+for Black, Hispanic, and Other are not statistically significant,
+providing no clear evidence that the treatment effect differs across these
+groups. The interaction term for the Asian/Pacific Islander group has a
+p-value of
 `r round(s_rf$coefficients["tx:raceth_labelAsian/PI", "Pr(>|z|)"], 3)`,
 but the confidence interval is extremely wide because there were only
 `r race_strata_df$Events[race_strata_df$Subgroup == "Asian/PI"]` events
@@ -358,14 +512,14 @@ summary_rows <- list(
     Upper = round(ci_sex_base[2], 3)
   ),
   data.frame(
-    Analysis = "Sex", Model = "Stratum-specific", Subgroup = "Female",
+    Analysis = "Sex", Model = "Full model (derived)", Subgroup = "Female",
     n = sex_strata_df$n[1], Events = sex_strata_df$Events[1],
     HR = sex_strata_df$HR[1],
     Lower = sex_strata_df$`95% CI Lower`[1],
     Upper = sex_strata_df$`95% CI Upper`[1]
   ),
   data.frame(
-    Analysis = "Sex", Model = "Stratum-specific", Subgroup = "Male",
+    Analysis = "Sex", Model = "Full model (derived)", Subgroup = "Male",
     n = sex_strata_df$n[2], Events = sex_strata_df$Events[2],
     HR = sex_strata_df$HR[2],
     Lower = sex_strata_df$`95% CI Lower`[2],
@@ -379,35 +533,35 @@ summary_rows <- list(
     Upper = round(ci_race_base[2], 3)
   ),
   data.frame(
-    Analysis = "Race", Model = "Stratum-specific", Subgroup = "White",
+    Analysis = "Race", Model = "Full model (derived)", Subgroup = "White",
     n = race_strata_df$n[1], Events = race_strata_df$Events[1],
     HR = race_strata_df$HR[1],
     Lower = race_strata_df$`95% CI Lower`[1],
     Upper = race_strata_df$`95% CI Upper`[1]
   ),
   data.frame(
-    Analysis = "Race", Model = "Stratum-specific", Subgroup = "Black",
+    Analysis = "Race", Model = "Full model (derived)", Subgroup = "Black",
     n = race_strata_df$n[2], Events = race_strata_df$Events[2],
     HR = race_strata_df$HR[2],
     Lower = race_strata_df$`95% CI Lower`[2],
     Upper = race_strata_df$`95% CI Upper`[2]
   ),
   data.frame(
-    Analysis = "Race", Model = "Stratum-specific", Subgroup = "Hispanic",
+    Analysis = "Race", Model = "Full model (derived)", Subgroup = "Hispanic",
     n = race_strata_df$n[3], Events = race_strata_df$Events[3],
     HR = race_strata_df$HR[3],
     Lower = race_strata_df$`95% CI Lower`[3],
     Upper = race_strata_df$`95% CI Upper`[3]
   ),
   data.frame(
-    Analysis = "Race", Model = "Stratum-specific", Subgroup = "Asian/PI",
+    Analysis = "Race", Model = "Full model (derived)", Subgroup = "Asian/PI",
     n = race_strata_df$n[4], Events = race_strata_df$Events[4],
     HR = race_strata_df$HR[4],
     Lower = race_strata_df$`95% CI Lower`[4],
     Upper = race_strata_df$`95% CI Upper`[4]
   ),
   data.frame(
-    Analysis = "Race", Model = "Stratum-specific", Subgroup = "Other",
+    Analysis = "Race", Model = "Full model (derived)", Subgroup = "Other",
     n = race_strata_df$n[5], Events = race_strata_df$Events[5],
     HR = race_strata_df$HR[5],
     Lower = race_strata_df$`95% CI Lower`[5],
@@ -418,17 +572,20 @@ summary_rows <- list(
 summary_df <- do.call(rbind, summary_rows)
 colnames(summary_df)[7:8] <- c("95% CI Lower", "95% CI Upper")
 
-
 qtable(summary_df, caption = NULL, align = "llllcccc", row.names = FALSE)
-
-
 ```
 
 ## Power Analysis
 
 Before estimating sample sizes for future studies, we calculated the
 observed power of the ACTG 320 analyses for the overall population and
-each subgroup. Power was estimated assuming equal allocation between treatment and control groups. To account for multiple hypothesis testing, we used a Bonferroni-adjusted significance level of $\alpha = 0.025$ for each interaction test. This adjustment controls the family-wise error rate across the two primary subgroup comparisons (sex and race/ethnicity), ensuring that the overall probability of a Type I error remains bounded at 0.05.
+each subgroup. Power was estimated assuming equal allocation between
+treatment and control groups. To account for multiple hypothesis testing,
+we used a Bonferroni-adjusted significance level of $\alpha = 0.025$ for
+each interaction test. This adjustment controls the family-wise error rate
+across the two primary subgroup comparisons (sex and race/ethnicity),
+ensuring that the overall probability of a Type I error remains bounded
+at 0.05.
 
 ```{r}
 #| label: power-setup
@@ -482,15 +639,16 @@ themselves too unstable to produce meaningful power calculations.
 
 initial_power_df <- data.frame(
   Analysis = c(
-    "Whole Group", "Sex", "Sex",
+    "Whole Group", "Whole Group", "Sex", "Sex",
     "Race/Ethnicity", "Race/Ethnicity", "Race/Ethnicity",
     "Race/Ethnicity", "Race/Ethnicity"
   ),
   Subgroup = c(
-    "All", "Female", "Male",
+    "All (unadjusted)", "All (adjusted)", "Female", "Male",
     "White", "Black", "Hispanic", "Asian/PI", "Other"
   ),
   n = c(
+    nrow(df),
     nrow(df),
     sex_strata_df$n[sex_strata_df$Subgroup == "Female"],
     sex_strata_df$n[sex_strata_df$Subgroup == "Male"],
@@ -502,6 +660,7 @@ initial_power_df <- data.frame(
   ),
   Events = c(
     sum(df$censor),
+    sum(df$censor),
     sex_strata_df$Events[sex_strata_df$Subgroup == "Female"],
     sex_strata_df$Events[sex_strata_df$Subgroup == "Male"],
     race_strata_df$Events[race_strata_df$Subgroup == "White"],
@@ -511,6 +670,7 @@ initial_power_df <- data.frame(
     race_strata_df$Events[race_strata_df$Subgroup == "Other"]
   ),
   `Observed HR` = c(
+    round(hr_whole_unadj, 3),
     round(hr_whole, 3),
     sex_strata_df$HR[sex_strata_df$Subgroup == "Female"],
     sex_strata_df$HR[sex_strata_df$Subgroup == "Male"],
@@ -541,11 +701,7 @@ initial_power_df$Interpretation <- ifelse(
   "Below 80%"
 )
 
-
-
 qtable(initial_power_df, caption = NULL, align = "llcccccl", row.names = FALSE)
-
-
 ```
 
 Detailed sample size calculations are provided in Appendix Tables A4--A6.
